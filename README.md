@@ -27,4 +27,10 @@ The file structre is outlined below:
     - data_gen.py
     - nn_gen.py
 
+## Dependencies
+- sys, argparse
+- numpy
+- torch
+- matplotlib.pyplot
+
 ## Running each model
