@@ -8,14 +8,18 @@ import numpy as np
 
 
 def calculate_weights(loss_values):
+    """
+    Scales the loss to the order of 1 (10^0)
+    :param loss_values: 1D numpy array
+    :return: scalar value if len(loss_values)=1, 1D numpy array otherwise
+    """
     loss_values = np.asarray(loss_values)
     if np.any(loss_values < 0):
         raise ValueError("Loss values should be non-negative")
 
     # find smallest order of magnitude in list of losses
     loss_magnitudes = [math.floor(math.log(loss, 10)) for loss in loss_values]
-    smallest_mag = min(loss_magnitudes)
-    weights = np.asarray([10**(x - smallest_mag) for x in loss_magnitudes])
+    weights = np.asarray([10 ** x for x in loss_magnitudes])
 
     if len(weights) == 1:
         return weights[0]
