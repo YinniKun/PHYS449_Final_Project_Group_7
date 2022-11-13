@@ -68,9 +68,9 @@ class Net(nn.Module):
     #!!!!!! the loss function is yet to be defined in main.py !!!!!
     def backprop(self, data, loss, optimizer):
         self.train()
-        loss_data = weighted_loss(data.data_inputs, data.data_labels, loss)
-        loss_ode = weighted_loss(data.ode_state, data.state_derivative, loss)
-        loss_aux = weighted_loss(data.aux_inputs, data.aux_labels, loss)
+        loss_data = self.weighted_loss(data.data_inputs, data.data_labels, loss)
+        loss_ode = self.weighted_loss(data.ode_state, data.state_derivative, loss)
+        loss_aux = self.weighted_loss(data.aux_inputs, data.aux_labels, loss)
         obj_val = loss_data+loss_ode+loss_aux
         optimizer.zero_grad()
         obj_val.backward()
@@ -99,6 +99,6 @@ class Net(nn.Module):
         """
         loss_value = loss(self.forward(input), label)
         loss_value = loss_value/input.size()
-        weight = calculate_weights(loss_values)
+        weight = calculate_weights(loss_value)
         loss_value = loss_value * weight
         return loss_value
