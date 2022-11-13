@@ -23,6 +23,7 @@ def calculate_weights(loss_values):
         return weights
 
 
+
 class Net(nn.Module):
     '''
     4-layer fully connected neural network
@@ -62,12 +63,22 @@ class Net(nn.Module):
         inputs= torch.from_numpy(data.x_train)
         targets= torch.from_numpy(data.y_train * ode_mean)
         obj_val= loss
+     # ode_mean (output scaling) is a the the magnitudes of the mean values of the ODE solution, in a vector
+    #   ode_mean should be a 1xn vector (callum and nolan think it should be in main.py)
+    #!!!!!! the loss function is yet to be defined in main.py !!!!!
+    def backprop(self, data, loss, optimizer):
+        self.train()
+        loss_data = weighted_loss(data.data_inputs, data.data_labels, loss)
+        loss_ode = weighted_loss(data.ode_state, data.state_derivative, loss)
+        loss_aux = weighted_loss(data.aux_inputs, data.aux_labels, loss)
+        obj_val = loss_data+loss_ode+loss_aux
         optimizer.zero_grad()
         obj_val.backward()
         optimizer.step()
         return obj_val.item()
     
     # Test function. Avoids calculation of gradients.
+
     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
     #   ode_mean should be a 1xn vector
     def test(self, data, loss, epoch, ode_mean):
@@ -78,4 +89,16 @@ class Net(nn.Module):
             cross_val= loss(self.forward(inputs), targets)
         return cross_val.item()
 
-
+    def weighted_loss(self, input, label, loss):
+        """
+        calculates weighted loss for any set of num
+        :param input: 1D Pytorch tensor
+        :param label: 1D Pytorch tensor
+        :param loss: Pytorch tensor
+        :return: 1D Pytorch tensor
+        """
+        loss_value = loss(self.forward(input), label)
+        loss_value = loss_value/input.size()
+        weight = calculate_weights(loss_values)
+        loss_value = loss_value * weight
+        return loss_value
