@@ -44,6 +44,7 @@ class Net(nn.Module):
     
     # Feedforward function
     def forward(self, x):
+        x = torch.from_numpy(x)
         h1 = nn.SiLU(self.fc1(x))
         h2 = nn.SiLU(self.fc2(h1))
         h3 = nn.SiLU(self.fc3(h2))
@@ -59,14 +60,6 @@ class Net(nn.Module):
         self.fc4.reset_parameters()
     
     # Backpropagation function
-     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
-    #   ode_mean should be a 1xn vector
-    #!!!!!! the loss function is yet to be defined in main.py !!!!!
-    def backprop(self, data, loss, epoch, optimizer, ode_mean):
-        self.train()
-        inputs= torch.from_numpy(data.x_train)
-        targets= torch.from_numpy(data.y_train * ode_mean)
-        obj_val= loss
      # ode_mean (output scaling) is a the the magnitudes of the mean values of the ODE solution, in a vector
     #   ode_mean should be a 1xn vector (callum and nolan think it should be in main.py)
     #!!!!!! the loss function is yet to be defined in main.py !!!!!
@@ -76,6 +69,16 @@ class Net(nn.Module):
         loss_ode = self.weighted_loss(data.ode_state, data.state_derivative, loss)
         loss_aux = self.weighted_loss(data.aux_inputs, data.aux_labels, loss)
         obj_val = loss_data+loss_ode+loss_aux
+        optimizer.zero_grad()
+        obj_val.backward()
+        optimizer.step()
+        return obj_val.item()
+
+    def backprop_no_ode(self, data, loss, optimizer):
+        self.train()
+        loss_data = self.weighted_loss(data.data_inputs, data.data_labels, loss)
+        loss_aux = self.weighted_loss(data.aux_inputs, data.aux_labels, loss)
+        obj_val = loss_data+loss_aux
         optimizer.zero_grad()
         obj_val.backward()
         optimizer.step()
