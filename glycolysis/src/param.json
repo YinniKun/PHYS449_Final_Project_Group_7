@@ -1,0 +1,17 @@
+{
+    "optim": {
+        "learning_rate": 1e-3,
+        "num_epochs": 1
+    },
+    "model":{
+        "input_size": 8,
+        "sequence_length": 2,
+        "hidden_size": 16,
+        "num_layers": 2
+    },
+    "data": {
+        "num_data_points": 2000,
+        "num_data_loss": 500,
+        "num_ode_loss": 500
+    }
+}
