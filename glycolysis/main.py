@@ -37,6 +37,12 @@ def run_nn(param, model, data):
 
     aux_loss_train_times = np.asarray([data.conc[0, 0], data.conc[-1, 0]])
 
+    # loop through initial iterations training just data and aux loss
+
+    # then loop through full iterations training all loss
+
+    # should put a flag somewhere (maybe in the Data class) to indicate if the data is noiseless or noisy
+
 
 
 
