@@ -7,41 +7,20 @@ import math
 import numpy as np
 
 
-def calculate_weights(loss_values):
-    """
-    Returns a weight that scales the input loss to the order of 1 (10^0)
-    :param loss_values: 1D numpy array
-    :return: scalar value if len(loss_values)=1, 1D numpy array otherwise
-    """
-    loss_values = np.asarray(loss_values)
-    if np.any(loss_values < 0):
-        raise ValueError("Loss values should be non-negative")
-
-    # find smallest order of magnitude in list of losses
-    loss_magnitudes = [math.floor(math.log(loss, 10)) for loss in loss_values]
-    weights = np.asarray([10 ** x for x in loss_magnitudes])
-
-    if len(weights) == 1:
-        return weights[0]
-    else:
-        return weights
-
-
-
 class Net(nn.Module):
-    '''
+    """
     4-layer fully connected neural network
     Activation functions are SiLU (Swish)
     Requires:
         The input data has been pre-processed with input scaling and input feature
-    '''
+    """
     def __init__(self, n_input):
         super(Net, self).__init__()
         self.fc1= nn.Linear(n_input, n_input)
         self.fc2= nn.Linear(n_input, n_input)
         self.fc3= nn.Linear(n_input, n_input)
         self.fc4= nn.Linear(n_input, n_input)
-    
+
     # Feedforward function
     def forward(self, x):
         x = torch.from_numpy(x)
@@ -50,7 +29,7 @@ class Net(nn.Module):
         h3 = nn.SiLU(self.fc3(h2))
         y = nn.SiLU(self.fc4(h3))
         return y
-    
+
     # Reset function for the training weights
     # Use if the same network is trained multiple times.
     def reset(self):
@@ -58,7 +37,7 @@ class Net(nn.Module):
         self.fc2.reset_parameters()
         self.fc3.reset_parameters()
         self.fc4.reset_parameters()
-    
+
     # Backpropagation function
      # ode_mean (output scaling) is a the the magnitudes of the mean values of the ODE solution, in a vector
     #   ode_mean should be a 1xn vector (callum and nolan think it should be in main.py)
@@ -83,7 +62,7 @@ class Net(nn.Module):
         obj_val.backward()
         optimizer.step()
         return obj_val.item()
-    
+
     # Test function. Avoids calculation of gradients.
 
     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
@@ -109,3 +88,23 @@ class Net(nn.Module):
         weight = calculate_weights(loss_value)
         loss_value = loss_value * weight
         return loss_value
+
+
+def calculate_weights(loss_values):
+    """
+    Returns a weight that scales the input loss to the order of 1 (10^0)
+    :param loss_values: 1D numpy array
+    :return: scalar value if len(loss_values)=1, 1D numpy array otherwise
+    """
+    loss_values = np.asarray(loss_values)
+    if np.any(loss_values < 0):
+        raise ValueError("Loss values should be non-negative")
+
+    # find smallest order of magnitude in list of losses
+    loss_magnitudes = [math.floor(math.log(loss, 10)) for loss in loss_values]
+    weights = np.asarray([10 ** x for x in loss_magnitudes])
+
+    if len(weights) == 1:
+        return weights[0]
+    else:
+        return weights

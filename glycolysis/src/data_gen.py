@@ -1,10 +1,14 @@
 ## Data for the glycolysis model
 import numpy as np
-class testdata():
+
+
+class TestData:
     def __init__(self, n_training_data, n_test_data):
-        '''Data generation
+        """
+        Data generation
         x_* attributes contain random bit strings of size n_bits
-        y_* attributes are the parity of each bit string'''
+        y_* attributes are the parity of each bit string
+        """
 
         data_inputs = np.random.rand(2, n_training_data)
         data_labels = np.random.rand(2, n_training_data)
