@@ -35,6 +35,8 @@ def run_nn(param, model, data):
     ode_loss_indexes = np.round(np.linspace(0, len(data.conc[:, 0]) - 1, ode_loss_train_size)).astype(int)
     ode_loss_train_times = data.conc[ode_loss_indexes, 0]
 
+    aux_loss_train_times = np.asarray([data.conc[0, 0], data.conc[-1, 0]])
+
 
 
 
