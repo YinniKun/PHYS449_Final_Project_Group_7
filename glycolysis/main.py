@@ -1,23 +1,10 @@
 #main file for glycolosis
 
 import json, argparse, torch, sys
+import src.data_gen as get_data
 import numpy as np
 import torch.optim as optim
 from src.nn_gen import Net
-from src.data_gen import TestData
-
-#all functions taken from Workshop 2... need to be fixed to fit the dataset(s) we are using -Callum
-def get_data_and_model(n_training_data, n_test_data):
-    """
-    Initializes the neural network model and training/test data
-    :param
-    :return: class Net and class Data
-    """
-
-    neural_net = Net(4)
-    net_data = TestData(n_training_data, n_test_data)
-
-    return neural_net, net_data
 
 
 def run_nn(param, model, data):
@@ -36,4 +23,8 @@ def run_nn(param, model, data):
 
 
 if __name__ == '__main__':
-    model, data = get_data_and_model(10, 5)
+
+    data = get_data.Data()
+    #model = Net()
+    data.save_as_csv()
+
