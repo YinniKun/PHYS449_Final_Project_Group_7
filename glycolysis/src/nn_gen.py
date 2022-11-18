@@ -9,7 +9,7 @@ import numpy as np
 
 def calculate_weights(loss_values):
     """
-    Scales the loss to the order of 1 (10^0)
+    Returns a weight that scales the input loss to the order of 1 (10^0)
     :param loss_values: 1D numpy array
     :return: scalar value if len(loss_values)=1, 1D numpy array otherwise
     """

@@ -3,9 +3,8 @@
 import json, argparse, torch, sys
 import numpy as np
 import torch.optim as optim
-sys.path.append('src')
-from nn_gen import Net
-from data_gen import testdata
+from src.nn_gen import Net
+from src.data_gen import testdata
 
 #all functions taken from Workshop 2... need to be fixed to fit the dataset(s) we are using -Callum
 def prep_demo(n_training_data, n_test_data):
@@ -22,7 +21,7 @@ def prep_demo(n_training_data, n_test_data):
 def run_demo(param, model, data):
 
     # Define an optimizer and the loss function
-    optimizer = optim.SGD(model.parameters(), lr=param['learning_rate'])
+    optimizer = optim.Adam(model.parameters(), lr=param['learning_rate'])
     loss = torch.nn.MSELoss(reduction= 'mean')
 
     obj_vals= []
