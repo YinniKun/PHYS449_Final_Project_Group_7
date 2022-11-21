@@ -64,8 +64,6 @@ def run_nn(param, model, data):
     ode_loss_train_size = param['data']['num_ode_loss']  # cant find in the paper where they specify this set size
 
 
-                                    ############ CALLUM START #############
-
     s = param['data']['num_species_tot']
     m = param['data']['num_species_measured']
 
@@ -83,8 +81,6 @@ def run_nn(param, model, data):
         print("cannot determine if noisy or noiseless")
         return -1
 
-
-                                        ############ CALLUM FINISH #############
 
 
     # Define an optimizer and the loss function
@@ -104,8 +100,6 @@ def run_nn(param, model, data):
 
     aux_loss_train_times = np.asarray([data.conc[0, 0], data.conc[-1, 0]])
 
-
-                                    ############ CALLUM START #############
 
     # loop through initial iterations training just data and aux loss
     for x in range(0, epoch_init_iter-1):
