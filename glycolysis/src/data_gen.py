@@ -80,7 +80,7 @@ class Data(Dataset):
     def save_as_csv(self):
         """Save time and concentrations to data.csv file."""
         head = ['t', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7']
-        np.savetxt('glycolysis/data.csv',
+        np.savetxt('src/data.csv',
                    np.hstack((self.time[:, None], self.conc)),
                    header='\t'.join(head),
                    delimiter='\t',

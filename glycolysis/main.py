@@ -32,19 +32,23 @@ def calculate_weights(loss_values):
         return weights
 
 
-def weighted_loss(input, label, loss, model):
+def weighted_loss(inputs, labels, loss, model):
     """
     calculates weighted loss for any set of num
-    :param input: 1D Pytorch tensor
-    :param label: 1D Pytorch tensor
+    :param inputs: 1D Pytorch tensor
+    :param labels: 1D Pytorch tensor
     :param loss: Pytorch tensor
+    :param model: Pytorch tensor
     :return: 1D Pytorch tensor
     """
-    loss_value = loss(model.forward(input), label)
-    loss_value = loss_value / input.size()
+    loss_values = []
+    for inc, x in enumerate(data.data_inputs):
+        loss_value = loss(model.forward(x), labels[1])
+        loss_values = loss_values.append(loss_value)
+    loss_values = loss_values / inputs.size()
     weight = calculate_weights(loss_value)
-    loss_value = loss_value * weight
-    return loss_value
+    loss_values = loss_values * weight
+    return loss_values
 
 
 def run_nn(param, model, data):
@@ -77,7 +81,7 @@ def run_nn(param, model, data):
 
     else:
         print("cannot determine if noisy or noiseless")
-        exit()
+        return -1
 
 
                                         ############ CALLUM FINISH #############
@@ -105,58 +109,60 @@ def run_nn(param, model, data):
 
     # loop through initial iterations training just data and aux loss
     for x in range(0, epoch_init_iter-1):
-        losses_data = []
-        losses_aux = []
+        losses_data_concs = []
+        losses_aux_concs = []
 
-        # calculate data loss for measures species
+        # calculate data loss for measured species
         for y in range(0, m):
-            for inc, z in enumerate(data.data_inputs):
-                loss_data = weighted_loss(y, data.data_labels[inc], mean_square_loss, model)
-                losses_data = losses_data.append(loss_data)
+            losses_data_conc = weighted_loss(data.data_inputs[:, y+1], data.data_labels[:, y+1],
+                                             mean_square_loss, model)
+            losses_data_concs = losses_data_concs.append(losses_data_conc)
+        data_loss_tot = losses_data_concs.sum()
 
         # calculate auxiliary loss for all species
         for y in range(0, s):
-            for inc, z in enumerate(data.aux_inputs):
-                loss_aux = weighted_loss(inc, data.aux_labels[y], mean_square_loss, model)
-                losses_aux = losses_aux.append(loss_aux)
+            losses_aux_conc = weighted_loss(data.aux_inputs[:, y+1], data.aux_labels[:, y+1],
+                                            mean_square_loss, model)
+            losses_aux_concs = losses_aux_concs.append(losses_aux_conc)
+        aux_loss_tot = losses_aux_concs.sum()
 
-        loss_tot = losses_data.sum() + losses_aux.sum()
-        Net.backprop(loss_tot, optimizer)
+        loss_tot = data_loss_tot + aux_loss_tot
+        model.backprop(loss_tot, optimizer)
 
         # Print loss 10 times per training session
         if not x % (epoch_init_iter / 10):
             print(f"Initial Data and Aux Training:\t \
             Epoch {x}/{epoch_init_iter}: \t loss: {loss_tot} \n")
-        else:
-            pass
     print(f"Initial Data and Aux Training:\t Done")
 
     # then loop through full iterations training all loss
     for x in range(0, epoch_full_iter - 1):
-        losses_data = []
-        losses_ode = []
-        losses_aux = []
+        losses_data_concs = []
+        losses_ode_concs = []
+        losses_aux_concs = []
 
         # calculate data loss for measured species
         for y in range(0, m):
-            for inc, z in enumerate(data.data_inputs):
-                loss_data = weighted_loss(y, data.data_labels[inc], mean_square_loss, model)
-                losses_data = losses_data.append(loss_data)
+            losses_data_conc = weighted_loss(data.data_inputs[:, y + 1], data.data_labels[:, y + 1],
+                                             mean_square_loss, model)
+            losses_data_concs = losses_data_concs.append(losses_data_conc)
+        data_loss_tot = losses_data_concs.sum()
 
         # calculate ode loss for all species
         for y in range(0, s):
-            for inc, z in enumerate(data.ode_state):
-                loss_ode = weighted_loss(y, data.state_derivative[inc], mean_square_loss, model)
-                losses_ode = losses_ode.append(loss_ode)
+            losses_ode_conc = weighted_loss(data.ode_inputs, data.ode_labels, mean_square_loss, model)
+            losses_ode_concs = losses_ode_concs.append(losses_ode_conc)
+        ode_loss_tot = losses_ode_concs.sum()
 
         # calculate auxiliary loss for all species
         for y in range(0, s):
-            for inc, z in enumerate(data.aux_inputs):
-                loss_aux = weighted_loss(y, data.aux_labels[inc], mean_square_loss, model)
-                losses_aux = losses_aux.append(loss_aux)
+            losses_aux_conc = weighted_loss(data.aux_inputs[:, y + 1], data.aux_labels[:, y + 1],
+                                            mean_square_loss, model)
+            losses_aux_concs = losses_aux_concs.append(losses_aux_conc)
+        aux_loss_tot = losses_aux_concs.sum()
 
-        loss_tot = losses_data.sum() + loss_ode.sum() + loss_aux.sum()
-        Net.backprop(loss_tot, optimizer)
+        loss_tot = data_loss_tot + ode_loss_tot + aux_loss_tot
+        model.backprop(loss_tot, optimizer)
 
         # Print loss 10 times per training session
         if not x % (epoch_full_iter/10):
@@ -166,12 +172,11 @@ def run_nn(param, model, data):
             pass
     # need to replace data.data_inputs, data.data_labels, data.ode_state, etc. with actual data variables
 
-                                    ############ CALLUM FINISH #############
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--param', help='json parameter file relative path', type=str)
+    parser.add_argument('--param', default="src/param.json", help='json parameter file relative path', type=str)
     parser.add_argument('--data_seed', help='Random seed for generating training data', type=int)
     args = parser.parse_args()
 
