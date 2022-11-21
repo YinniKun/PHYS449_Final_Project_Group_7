@@ -19,6 +19,8 @@
         "t_max": 10,
         "num_data_points": 2000,
         "num_data_loss": 500,
-        "num_ode_loss": 500
+        "num_ode_loss": 500,
+        "num_species_tot": 7,
+        "num_species_measured": 2
     }
 }
