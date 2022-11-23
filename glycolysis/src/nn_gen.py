@@ -1,33 +1,54 @@
 ## Neutral Network for the glycolysis model
 
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as func
-import math
-import numpy as np
 
 
 class Net(nn.Module):
-    """
+    '''
     4-layer fully connected neural network
     Activation functions are SiLU (Swish)
-    Requires:
-        The input data has been pre-processed with input scaling and input feature
-    """
-    def __init__(self, n_input):
+    parameters:
+        n_output = the number of chemical species generated
+        ode_mean = the mean value of the ode solution used in the output
+            scaling layer
+        t_max = the max time point t in the input scaling layer
+    '''
+    def __init__(self, n_output, ode_mean, t_max):
         super(Net, self).__init__()
-        self.fc1= nn.Linear(n_input, n_input)
-        self.fc2= nn.Linear(n_input, n_input)
-        self.fc3= nn.Linear(n_input, n_input)
-        self.fc4= nn.Linear(n_input, n_input)
+        self.fc1= nn.Linear(7, 128)
+        self.fc2= nn.Linear(128, 128)
+        self.fc3= nn.Linear(128, 128)
+        self.fc4= nn.Linear(128, n_output)
+
+    def feature(self, t):
+        """
+        Extract feature layer from single (scaled) time value.
+
+        :param t: float
+        :returns: 7D tensor
+        """
+        return torch.tensor([
+            t,
+            math.sin(t),
+            math.sin(t*2),
+            math.sin(t*3),
+            math.sin(t*4),
+            math.sin(t*5),
+            math.sin(t*6)
+            ])
 
     # Feedforward function
-    def forward(self, x):
-        x = torch.from_numpy(x)
-        h1 = nn.SiLU(self.fc1(x))
+    def forward(self, t):
+        f1 = self.feature(t)
+        in_scal = f1 / t_max
+        h1 = nn.SiLU(self.fc1(in_scal))
         h2 = nn.SiLU(self.fc2(h1))
         h3 = nn.SiLU(self.fc3(h2))
-        y = nn.SiLU(self.fc4(h3))
+        y = nn.SiLU(self.fc4(h3))* ode_mean
         return y
 
     # Reset function for the training weights
@@ -39,31 +60,26 @@ class Net(nn.Module):
         self.fc4.reset_parameters()
 
     # Backpropagation function
-    def backprop(self, loss_val, optimizer):
+     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
+    #   ode_mean should be a 1xn vector
+    #!!!!!! the loss function is yet to be defined in main.py !!!!!
+    def backprop(self, data, loss, epoch, optimizer, ode_mean):
         self.train()
-        optimizer.zero_grad()
-        loss_val.backward()
-        optimizer.step()
-        # return obj_val.item()
-
-    """def backprop_no_ode(self, data, loss, optimizer):
-        self.train()
-        loss_data = self.weighted_loss(data.data_inputs, data.data_labels, loss)
-        loss_aux = self.weighted_loss(data.aux_inputs, data.aux_labels, loss)
-        obj_val = loss_data+loss_aux
+        inputs= torch.from_numpy(data.x_train)
+        targets= torch.from_numpy(data.y_train)
+        obj_val= loss(self.forward(inputs), targets)
         optimizer.zero_grad()
         obj_val.backward()
         optimizer.step()
-        return obj_val.item()""" # func doesn't need to exist, since loss is now passed as argument
+        return obj_val.item()
 
     # Test function. Avoids calculation of gradients.
-
     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
     #   ode_mean should be a 1xn vector
     def test(self, data, loss, epoch, ode_mean):
         self.eval()
         with torch.no_grad():
-            inputs = torch.from_numpy(data.x_test)
-            targets = torch.from_numpy(data.y_test * ode_mean)
-            cross_val = loss(self.forward(inputs), targets)
+            inputs= torch.from_numpy(data.x_test)
+            targets= torch.from_numpy(data.y_test)
+            cross_val= loss(self.forward(inputs), targets)
         return cross_val.item()
