@@ -50,7 +50,7 @@ def glycolysis_model(t, p):
 class Data(Dataset):
     """Dataset of concentrations of glycolysis chemical species over time."""
 
-    def __init__(self, t_min=0, t_max=10, n_points=2001):
+    def __init__(self, params, t_min=0, t_max=10, n_points=2001):
         """Solve glycolysis ODE for concentrations over time."""
         # Correct parameter values.
         J0 = 2.5
@@ -72,6 +72,26 @@ class Data(Dataset):
         # Find correct solution.
         self.time = np.linspace(t_min, t_max, n_points)  # 1D np array size n_points
         self.conc = glycolysis_model(self.time, self.p0)  # 2D np array size n_points x 7 (7 species)
+
+        data_loss_train_size = params['num_data_loss']
+        ode_loss_train_size = params['num_ode_loss']  # cant find in the paper where they specify this set size
+
+        # get times for training data
+
+        # get data_loss_train_size random time points for training the data loss
+        rand_indexes = np.random.default_rng().choice(self.conc[:, 0].size, data_loss_train_size, replace=False)
+        rand_indexes = np.sort(rand_indexes)  # random time points
+
+        # get ode_loss_train_size equispaced time points for training the ode loss
+        ode_loss_indexes = np.round(np.linspace(0, len(self.conc[:, 0]) - 1, ode_loss_train_size)).astype(int)
+        ode_loss_train_times = self.conc[ode_loss_indexes, 0]
+
+
+
+        self.data_inputs = self.time[rand_indexes]
+        self.data_labels = np.asarray([self.conc[rand_indexes, 4], self.conc[rand_indexes, 5]])
+        self.aux_inputs = np.asarray([self.time[0], self.time[-1]])
+        self.aux_labels = np.asarray([[x, y] for x, y in zip(self.conc[0, :], self.conc[-1, :])])
 
     def __len__(self):
         """Get number of samples in dataset."""

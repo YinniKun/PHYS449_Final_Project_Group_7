@@ -43,6 +43,8 @@ def weighted_loss(inputs, labels, loss, model):
     """
     loss_values = []
     for inc, x in enumerate(data.data_inputs):
+        x = np.asarray([x], dtype=np.float32)
+
         loss_value = loss(model.forward(x), labels[1])
         loss_values = loss_values.append(loss_value)
     loss_values = loss_values / inputs.size()
@@ -60,20 +62,16 @@ def run_nn(param, model, data):
     :return: ?
     """
     learning_rate = param['optim']['learning_rate']
-    data_loss_train_size = param['data']['num_data_loss']
-    ode_loss_train_size = param['data']['num_ode_loss']  # cant find in the paper where they specify this set size
-
-
     s = param['data']['num_species_tot']
     m = param['data']['num_species_measured']
 
     # should put a flag somewhere (maybe in the Data class) to indicate if the data is noiseless or noisy
     # Statements for noisy/noiseless flag, make the noisy/noiseless part of the .json and include in data param??
-    if param['optim']['noisy?']:
+    if param['data']['noisy?']:
         epoch_init_iter = param['optim']['init_iters_noisy']
         epoch_full_iter = param['optim']['full_iters_noisy']
 
-    elif not param['optim']['noisy?']:
+    elif not param['data']['noisy?']:
         epoch_init_iter = param['optim']['init_iters_noiseless']
         epoch_full_iter = param['optim']['full_iters_noiseless']
 
@@ -89,17 +87,6 @@ def run_nn(param, model, data):
 
     model.reset()  # reset model parameters every time the nn is run
 
-    # get data_loss_train_size random time points for training the data loss
-    rand_indexes = np.random.default_rng().choice(data.conc[:, 0].size, data_loss_train_size, replace=False)
-    rand_indexes = np.sort(rand_indexes)
-    data_loss_train_times = data.conc[rand_indexes, 0]
-
-    # get ode_loss_train_size equispaced time points for training the ode loss
-    ode_loss_indexes = np.round(np.linspace(0, len(data.conc[:, 0]) - 1, ode_loss_train_size)).astype(int)
-    ode_loss_train_times = data.conc[ode_loss_indexes, 0]
-
-    aux_loss_train_times = np.asarray([data.conc[0, 0], data.conc[-1, 0]])
-
 
     # loop through initial iterations training just data and aux loss
     for x in range(0, epoch_init_iter-1):
@@ -108,14 +95,14 @@ def run_nn(param, model, data):
 
         # calculate data loss for measured species
         for y in range(0, m):
-            losses_data_conc = weighted_loss(data.data_inputs[:, y+1], data.data_labels[:, y+1],
+            losses_data_conc = weighted_loss(data.data_inputs, data.data_labels[y],
                                              mean_square_loss, model)
             losses_data_concs = losses_data_concs.append(losses_data_conc)
         data_loss_tot = losses_data_concs.sum()
 
         # calculate auxiliary loss for all species
         for y in range(0, s):
-            losses_aux_conc = weighted_loss(data.aux_inputs[:, y+1], data.aux_labels[:, y+1],
+            losses_aux_conc = weighted_loss(data.aux_inputs, data.aux_labels[y],
                                             mean_square_loss, model)
             losses_aux_concs = losses_aux_concs.append(losses_aux_conc)
         aux_loss_tot = losses_aux_concs.sum()
@@ -130,14 +117,14 @@ def run_nn(param, model, data):
     print(f"Initial Data and Aux Training:\t Done")
 
     # then loop through full iterations training all loss
-    for x in range(0, epoch_full_iter - 1):
+    """for x in range(0, epoch_full_iter - 1):
         losses_data_concs = []
         losses_ode_concs = []
         losses_aux_concs = []
 
         # calculate data loss for measured species
         for y in range(0, m):
-            losses_data_conc = weighted_loss(data.data_inputs[:, y + 1], data.data_labels[:, y + 1],
+            losses_data_conc = weighted_loss(data.data_inputs, data.data_labels[y],
                                              mean_square_loss, model)
             losses_data_concs = losses_data_concs.append(losses_data_conc)
         data_loss_tot = losses_data_concs.sum()
@@ -150,7 +137,7 @@ def run_nn(param, model, data):
 
         # calculate auxiliary loss for all species
         for y in range(0, s):
-            losses_aux_conc = weighted_loss(data.aux_inputs[:, y + 1], data.aux_labels[:, y + 1],
+            losses_aux_conc = weighted_loss(data.aux_inputs, data.aux_labels[y],
                                             mean_square_loss, model)
             losses_aux_concs = losses_aux_concs.append(losses_aux_conc)
         aux_loss_tot = losses_aux_concs.sum()
@@ -163,7 +150,7 @@ def run_nn(param, model, data):
             print(f"Full Training: \t \
             Epoch {x}/{epoch_full_iter}:\t loss: {loss_tot}\n")
         else:
-            pass
+            pass"""
     # need to replace data.data_inputs, data.data_labels, data.ode_state, etc. with actual data variables
 
 
@@ -179,12 +166,12 @@ if __name__ == '__main__':
 
     num_data_points = params['data']['num_data_points']
 
-    data = get_data.Data(n_points=num_data_points)
+    data = get_data.Data(params['data'], n_points=num_data_points)
     data.save_as_csv()
 
     model = Net(1)  # need to figure out the parameters to send to this, using 1 as dummy parameter.
                     # Should it be 128, because NN width in paper is 128 for glycolysis?
                     # also where do the 7 feature layers fit in?
-
+    #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
 

@@ -2,7 +2,6 @@
     "optim": {
         "learning_rate": 1e-3,
         "num_epochs": 1,
-        "noisy?": false,
         "init_iters_noiseless": 1000,
         "full_iters_noiseless": 9e4,
         "init_iters_noisy": 1000,
@@ -21,6 +20,7 @@
         "num_data_loss": 500,
         "num_ode_loss": 500,
         "num_species_tot": 7,
-        "num_species_measured": 2
+        "num_species_measured": 2,
+        "noisy?": false
     }
 }
