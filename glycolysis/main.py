@@ -15,15 +15,12 @@ from src.nn_gen import Net
 def calculate_weights(loss_values):
     """
     Returns a weight that scales the input loss to the order of 1 (10^0)
-    :param loss_values: 1D numpy array
+    :param loss_values: 1D python list of loss scalars
     :return: scalar value if len(loss_values)=1, 1D numpy array otherwise
     """
     loss_values = np.asarray(loss_values)
-    if np.any(loss_values < 0):
-        raise ValueError("Loss values should be non-negative")
-
     # find smallest order of magnitude in list of losses
-    loss_magnitudes = [math.floor(math.log(loss, 10)) for loss in loss_values]
+    loss_magnitudes = [math.floor(math.log(loss.item(), 10)) for loss in loss_values]
     weights = np.asarray([10 ** x for x in loss_magnitudes])
 
     if len(weights) == 1:
@@ -32,24 +29,23 @@ def calculate_weights(loss_values):
         return weights
 
 
-def weighted_loss(inputs, labels, loss, model):
+def weighted_loss(inputs, labels, loss, model, num_conc):
     """
-    calculates weighted loss for any set of num
-    :param inputs: 1D Pytorch tensor
-    :param labels: 1D Pytorch tensor
+    calculates weighted losses for each time point
+    :param inputs: 1D Numpy array
+    :param labels: 2D Numpy array
     :param loss: Pytorch tensor
     :param model: Pytorch tensor
-    :return: 1D Pytorch tensor
+    :return: 1D python list of weighted losses
     """
     loss_values = []
-    for inc, x in enumerate(data.data_inputs):
-        x = np.asarray([x], dtype=np.float32)
-
-        loss_value = loss(model.forward(x), labels[1])
-        loss_values = loss_values.append(loss_value)
-    loss_values = loss_values / inputs.size()
-    weight = calculate_weights(loss_value)
-    loss_values = loss_values * weight
+    for inc, x in enumerate(inputs):
+        label = torch.from_numpy(np.asarray([labels[inc]]))
+        loss_value = loss(model.forward(x)[num_conc], label)
+        loss_values.append(loss_value)
+    loss_sum = sum([x.item() for x in loss_values])
+    weight = calculate_weights([loss_sum / inputs.size])
+    loss_values = [x * weight for x in loss_values]
     return loss_values
 
 
@@ -87,27 +83,52 @@ def run_nn(param, model, data):
 
     model.reset()  # reset model parameters every time the nn is run
 
-
+    # concentration indexes for glycolysis model (0 indexed)
+    m = [4, 5]
     # loop through initial iterations training just data and aux loss
     for x in range(0, epoch_init_iter-1):
-        losses_data_concs = []
-        losses_aux_concs = []
+        summed_data_losses = []
+        summed_aux_losses = []
 
         # calculate data loss for measured species
-        for y in range(0, m):
-            losses_data_conc = weighted_loss(data.data_inputs, data.data_labels[y],
-                                             mean_square_loss, model)
-            losses_data_concs = losses_data_concs.append(losses_data_conc)
-        data_loss_tot = losses_data_concs.sum()
+        for inc, y in enumerate(m):
+            # get losses for each time point
+            data_losses = weighted_loss(data.data_inputs, data.data_labels[:, y],
+                                             mean_square_loss, model, y)
+            # inner sum over time points
+            data_losses_sum = data_losses[0]
+            for loss in data_losses[1:]:
+                data_losses_sum = torch.add(data_losses_sum, loss)
+
+            # append inner sums of each concentration to a list
+            summed_data_losses.append(data_losses_sum)
+
+        # outer sum of losses for m concentrations
+        data_loss_total = summed_data_losses[0]
+        for loss in summed_data_losses[1:]:
+            data_loss_total = torch.add(data_loss_total, loss)
 
         # calculate auxiliary loss for all species
         for y in range(0, s):
-            losses_aux_conc = weighted_loss(data.aux_inputs, data.aux_labels[y],
-                                            mean_square_loss, model)
-            losses_aux_concs = losses_aux_concs.append(losses_aux_conc)
-        aux_loss_tot = losses_aux_concs.sum()
+            # get losses for each time point
+            aux_losses = weighted_loss(data.aux_inputs, data.aux_labels[y],
+                                            mean_square_loss, model, y)
+            # inner sum over time points
+            aux_losses_sum = aux_losses[0]
+            for loss in aux_losses[1:]:
+                aux_losses_sum = torch.add(aux_losses_sum, loss)
 
-        loss_tot = data_loss_tot + aux_loss_tot
+            # append inner sums of each concentration to a list
+            summed_aux_losses.append(aux_losses_sum)
+
+        # outer sum of loss of all species
+        aux_loss_total = summed_aux_losses[0]
+        for loss in summed_aux_losses[1:]:
+            aux_loss_tot = torch.add(aux_loss_total, loss)
+
+        # sum of total data and aux losses
+        loss_tot = data_loss_total + aux_loss_tot
+
         model.backprop(loss_tot, optimizer)
 
         # Print loss 10 times per training session
@@ -116,18 +137,28 @@ def run_nn(param, model, data):
             Epoch {x}/{epoch_init_iter}: \t loss: {loss_tot} \n")
     print(f"Initial Data and Aux Training:\t Done")
 
-    # then loop through full iterations training all loss
-    """for x in range(0, epoch_full_iter - 1):
-        losses_data_concs = []
-        losses_ode_concs = []
-        losses_aux_concs = []
+    """# then loop through full iterations training all loss
+    for x in range(0, epoch_init_iter - 1):
+        summed_data_losses = []
+        summed_aux_losses = []
 
         # calculate data loss for measured species
-        for y in range(0, m):
-            losses_data_conc = weighted_loss(data.data_inputs, data.data_labels[y],
-                                             mean_square_loss, model)
-            losses_data_concs = losses_data_concs.append(losses_data_conc)
-        data_loss_tot = losses_data_concs.sum()
+        for inc, y in enumerate(m):
+            # get losses for each time point
+            data_losses = weighted_loss(data.data_inputs, data.data_labels[:, y],
+                                        mean_square_loss, model, y)
+            # inner sum over time points
+            data_losses_sum = data_losses[0]
+            for loss in data_losses[1:]:
+                data_losses_sum = torch.add(data_losses_sum, loss)
+
+            # append inner sums of each concentration to a list
+            summed_data_losses.append(data_losses_sum)
+
+        # outer sum of losses for m concentrations
+        data_loss_total = summed_data_losses[0]
+        for loss in summed_data_losses[1:]:
+            data_loss_total = torch.add(data_loss_total, loss)
 
         # calculate ode loss for all species
         for y in range(0, s):
@@ -137,20 +168,28 @@ def run_nn(param, model, data):
 
         # calculate auxiliary loss for all species
         for y in range(0, s):
-            losses_aux_conc = weighted_loss(data.aux_inputs, data.aux_labels[y],
-                                            mean_square_loss, model)
-            losses_aux_concs = losses_aux_concs.append(losses_aux_conc)
-        aux_loss_tot = losses_aux_concs.sum()
+            # get losses for each time point
+            aux_losses = weighted_loss(data.aux_inputs, data.aux_labels[y],
+                                       mean_square_loss, model, y)
+            # inner sum over time points
+            aux_losses_sum = aux_losses[0]
+            for loss in aux_losses[1:]:
+                aux_losses_sum = torch.add(aux_losses_sum, loss)
 
-        loss_tot = data_loss_tot + ode_loss_tot + aux_loss_tot
+            # append inner sums of each concentration to a list
+            summed_aux_losses.append(aux_losses_sum)
+
+        # outer sum of loss of all species
+        aux_loss_total = summed_aux_losses[0]
+        for loss in summed_aux_losses[1:]:
+            aux_loss_tot = torch.add(aux_loss_total, loss)
+
+        # sum of total data and aux losses
+        loss_tot = data_loss_total + aux_loss_tot
+
         model.backprop(loss_tot, optimizer)
+        """
 
-        # Print loss 10 times per training session
-        if not x % (epoch_full_iter/10):
-            print(f"Full Training: \t \
-            Epoch {x}/{epoch_full_iter}:\t loss: {loss_tot}\n")
-        else:
-            pass"""
     # need to replace data.data_inputs, data.data_labels, data.ode_state, etc. with actual data variables
 
 
@@ -169,9 +208,10 @@ if __name__ == '__main__':
     data = get_data.Data(params['data'], n_points=num_data_points)
     data.save_as_csv()
 
-    model = Net(1)  # need to figure out the parameters to send to this, using 1 as dummy parameter.
+    model = Net(7)  # need to figure out the parameters to send to this, using 1 as dummy parameter.
                     # Should it be 128, because NN width in paper is 128 for glycolysis?
                     # also where do the 7 feature layers fit in?
+    model.double()
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
 

@@ -1,6 +1,7 @@
 ## Neutral Network for the glycolysis model
 
 import math
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -17,7 +18,7 @@ class Net(nn.Module):
             scaling layer
         t_max = the max time point t in the input scaling layer
     '''
-    def __init__(self, n_output, ode_mean, t_max):
+    def __init__(self, n_output):
         super(Net, self).__init__()
         self.fc1= nn.Linear(7, 128)
         self.fc2= nn.Linear(128, 128)
@@ -42,13 +43,13 @@ class Net(nn.Module):
             ])
 
     # Feedforward function
-    def forward(self, t):
+    def forward(self, t, t_max=10, ode_mean=10):
         f1 = self.feature(t)
         in_scal = f1 / t_max
-        h1 = nn.SiLU(self.fc1(in_scal))
-        h2 = nn.SiLU(self.fc2(h1))
-        h3 = nn.SiLU(self.fc3(h2))
-        y = nn.SiLU(self.fc4(h3))* ode_mean
+        h1 = func.silu(self.fc1(in_scal))
+        h2 = func.silu(self.fc2(h1))
+        h3 = func.silu(self.fc3(h2))
+        y = func.silu(self.fc4(h3))* ode_mean
         return y
 
     # Reset function for the training weights
@@ -63,15 +64,12 @@ class Net(nn.Module):
      # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
     #   ode_mean should be a 1xn vector
     #!!!!!! the loss function is yet to be defined in main.py !!!!!
-    def backprop(self, data, loss, epoch, optimizer, ode_mean):
+    def backprop(self, loss, optimizer):
         self.train()
-        inputs= torch.from_numpy(data.x_train)
-        targets= torch.from_numpy(data.y_train)
-        obj_val= loss(self.forward(inputs), targets)
         optimizer.zero_grad()
-        obj_val.backward()
+        loss.backward()
         optimizer.step()
-        return obj_val.item()
+        return loss.item()
 
     # Test function. Avoids calculation of gradients.
     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector

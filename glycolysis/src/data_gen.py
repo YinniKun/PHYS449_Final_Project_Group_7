@@ -70,7 +70,7 @@ class Data(Dataset):
         self.p0 = [J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A]
 
         # Find correct solution.
-        self.time = np.linspace(t_min, t_max, n_points)  # 1D np array size n_points
+        self.time = np.linspace(t_min, t_max, n_points, dtype=np.float64)  # 1D np array size n_points
         self.conc = glycolysis_model(self.time, self.p0)  # 2D np array size n_points x 7 (7 species)
 
         data_loss_train_size = params['num_data_loss']
@@ -89,7 +89,7 @@ class Data(Dataset):
 
 
         self.data_inputs = self.time[rand_indexes]
-        self.data_labels = np.asarray([self.conc[rand_indexes, 4], self.conc[rand_indexes, 5]])
+        self.data_labels = self.conc[rand_indexes]
         self.aux_inputs = np.asarray([self.time[0], self.time[-1]])
         self.aux_labels = np.asarray([[x, y] for x, y in zip(self.conc[0, :], self.conc[-1, :])])
 
