@@ -1,5 +1,6 @@
 ## Data for the glycolysis model
 import numpy as np
+import math
 from scipy.integrate import odeint
 from torch.utils.data import Dataset
 
@@ -60,6 +61,66 @@ def glycolysis_model(t, p, x=None):
     else:
         res = f(x, t)
     return res
+
+
+def grad_glycolysis_model(t, p, x):
+    """
+    Find gradient of the glycolysis ODE wrt p for S concentrations at time t.
+
+    :param t: int
+    :param p: list of K parameter values
+    :param x: array of S concentrations
+    :return: KxS array of gradient values
+
+    """
+    J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A = p
+
+    d_v1_comp = (k1 * x[0] * x[5] / (1 + (x[5] / K1)**q)**2) * (x[5] / K1)**q
+
+    d_v1_d_k1 = x[0] * x[5] / (1 + (x[5] / K1) ** q)
+    d_v2_d_k2 = x[1] * (N - x[4])
+    d_v3_d_k3 = x[2] * (A - x[5])
+    d_v4_d_k4 = x[3] * x[4]
+    d_v5_d_k5 = x[5]
+    d_v6_d_k6 = x[1] * x[4]
+    d_v7_d_k = x[6]
+    d_J_d_kappa = x[3] - x[6]
+    d_v1_d_q = -d_v1_comp * math.log(x[5] / K1)
+    d_v1_d_K1 = d_v1_comp * q / K1
+    d_v2_d_N = k2 * x[1]
+    d_v3_dA = k3 * x[2]
+
+    d_f_d_J0 = [1, 0, 0, 0, 0, 0, 0]
+    d_f_d_k1 = [-d_v1_d_k1, 2 * d_v1_d_k1, 0, 0, 0, -2 * d_v1_d_k1, 0]
+    d_f_d_k2 = [0, -d_v2_d_k2, d_v2_d_k2, 0, d_v2_d_k2, 0, 0]
+    d_f_d_k3 = [0, 0, -d_v3_d_k3, d_v3_d_k3, 0, 2 * d_v3_d_k3, 0]
+    d_f_d_k4 = [0, 0, 0, -d_v4_d_k4, -d_v4_d_k4, 0, 0]
+    d_f_d_k5 = [0, 0, 0, 0, 0, -d_v5_d_k5, 0]
+    d_f_d_k6 = [0, -d_v6_d_k6, 0, 0, -d_v6_d_k6, 0, 0]
+    d_f_d_k = [0, 0, 0, 0, 0, 0, -d_v7_d_k]
+    d_f_d_kappa = [0, 0, 0, -d_J_d_kappa, 0, 0, psi * d_J_d_kappa]
+    d_f_d_q = [-d_v1_d_q, 2 * d_v1_d_q, 0, 0, 0, -2 * d_v1_d_q, 0]
+    d_f_d_K1 = [-d_v1_d_K1, 2 * d_v1_d_K1, 0, 0, 0, -2 * d_v1_d_K1, 0]
+    d_f_d_psi = [0, 0, 0, 0, 0, 0, kappa * (x[3] - x[6])]
+    d_f_d_N = [0, -d_v2_d_N, d_v2_d_N, 0, d_v2_d_N, 0, 0]
+    d_f_d_A = [0, 0, -d_v3_dA, d_v3_dA, 0, 2 * d_v3_dA, 0]
+
+    return np.asarray([
+        d_f_d_J0,
+        d_f_d_k1,
+        d_f_d_k2,
+        d_f_d_k3,
+        d_f_d_k4,
+        d_f_d_k5,
+        d_f_d_k6,
+        d_f_d_k,
+        d_f_d_kappa,
+        d_f_d_q,
+        d_f_d_K1,
+        d_f_d_psi,
+        d_f_d_N,
+        d_f_d_A
+        ])
 
 
 class Data(Dataset):
