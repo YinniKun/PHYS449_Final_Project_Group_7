@@ -4,14 +4,22 @@ from scipy.integrate import odeint
 from torch.utils.data import Dataset
 
 
-def glycolysis_model(t, p):
+def glycolysis_model(t, p, x=None):
     """
     Solve glycolysis ODE for S concentrations over time given parameters in p.
 
-    :param t: array of N time values
+    :param t: array of N time values. If x is provided, N must be 1.
     :param p: list of K parameter values
-    :return: NxS array of concentrations
+    :param x: array of S concentrations if not solving model for >1 time point
+    :return: NxS array of concentrations (or derivatives if x is provided)
+
     """
+
+    # Assert dimensions are compatible.
+    if x is not None and len(t) > 1:
+        msg = 'If not solving glycolysis_model over time, provide one t value'
+        raise ValueError(f'{msg}, not {len(t)} values')
+
     J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A = p
 
     def f(x, t):
@@ -44,7 +52,14 @@ def glycolysis_model(t, p):
         0.16127341,
         0.06404702,
     ]
-    return odeint(f, x0, t)
+
+    # Solve model for all time points if no x is provided.
+    if x is None:
+        res = odeint(f, x0, t)
+    # Otherwise, find the time derivatives of each species in x at t given p.
+    else:
+        res = f(x, t)
+    return res
 
 
 class Data(Dataset):
@@ -105,4 +120,3 @@ class Data(Dataset):
                    header='\t'.join(head),
                    delimiter='\t',
                    comments='')
-
