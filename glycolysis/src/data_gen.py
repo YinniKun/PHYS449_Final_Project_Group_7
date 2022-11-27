@@ -54,7 +54,7 @@ def glycolysis_model(t, p, x=None):
 
     def f(x, t):
         """Glycolysis ODE model."""
-        v1 = k1 * x[0] * x[5] / max((1 + (x[5] / K1) ** q), 0.001)
+        v1 = k1 * x[0] * x[5] / (1 + max((x[5] / K1), 0.001) ** q)
         v2 = k2 * x[1] * (N - x[4])
         v3 = k3 * x[2] * (A - x[5])
         v4 = k4 * x[3] * x[4]
@@ -104,9 +104,9 @@ def grad_glycolysis_model(t, p, x):
     """
     J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A = p
 
-    d_v1_comp = (k1 * x[0] * x[5] / (1 + (x[5] / K1)**q)**2) * (x[5] / K1)**q
+    d_v1_comp = (k1 * x[0] * x[5] / (1 + (max((x[5] / K1), 0.001))**q)**2) * (max((x[5] / K1), 0.001))**q
 
-    d_v1_d_k1 = x[0] * x[5] / max((1 + (x[5] / K1) ** q), 0.0001)
+    d_v1_d_k1 = x[0] * x[5] / (1 + (max((x[5] / K1), 0.001)) ** q)
     d_v2_d_k2 = x[1] * (N - x[4])
     d_v3_d_k3 = x[2] * (A - x[5])
     d_v4_d_k4 = x[3] * x[4]
