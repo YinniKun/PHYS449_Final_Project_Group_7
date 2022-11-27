@@ -4,6 +4,35 @@ import math
 from scipy.integrate import odeint
 from torch.utils.data import Dataset
 
+def guess_p():
+    # actual p values
+    J0 = 2.5
+    k1 = 100
+    k2 = 6
+    k3 = 16
+    k4 = 100
+    k5 = 1.28
+    k6 = 12
+    k = 1.8
+    kappa = 13
+    q = 4
+    K1 = 0.52
+    psi = 0.1
+    N = 1
+    A = 4
+
+    p0 = [J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A]
+
+    noise = np.random.default_rng().normal(0, 1, len(p0))
+    p0 = p0 + noise
+
+    # log is done on K1 in gradient calculation so have to ensure it is not less than 0
+    while p0[10] < 0:
+        noise = np.random.default_rng().normal(0, 1, len(p0))
+        p0 = p0 + noise
+
+    return p0
+
 
 def glycolysis_model(t, p, x=None):
     """
@@ -67,7 +96,7 @@ def grad_glycolysis_model(t, p, x):
     """
     Find gradient of the glycolysis ODE wrt p for S concentrations at time t.
 
-    :param t: int
+    :param t: float
     :param p: list of K parameter values
     :param x: array of S concentrations
     :return: KxS array of gradient values
@@ -160,14 +189,14 @@ class Data(Dataset):
 
         # get ode_loss_train_size equispaced time points for training the ode loss
         ode_loss_indexes = np.round(np.linspace(0, len(self.conc[:, 0]) - 1, ode_loss_train_size)).astype(int)
-        ode_loss_train_times = self.conc[ode_loss_indexes, 0]
-
-
 
         self.data_inputs = self.time[rand_indexes]
         self.data_labels = self.conc[rand_indexes]
+
         self.aux_inputs = np.asarray([self.time[0], self.time[-1]])
         self.aux_labels = np.asarray([[x, y] for x, y in zip(self.conc[0, :], self.conc[-1, :])])
+
+        self.ode_inputs = self.time[ode_loss_indexes]
 
     def __len__(self):
         """Get number of samples in dataset."""
