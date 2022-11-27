@@ -21,17 +21,17 @@ def guess_p():
     N = 1
     A = 4
 
-    p0 = [J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A]
+    p0 = np.asarray([J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A])
 
-    noise = np.random.default_rng().normal(0, 1, len(p0))
-    p0 = p0 + noise
+    noise = np.asarray([np.random.default_rng().normal(0, p_i * 0.15) for p_i in p0])
+    p = p0 + noise
 
     # log is done on K1 in gradient calculation so have to ensure it is not less than 0
-    while p0[10] < 0:
-        noise = np.random.default_rng().normal(0, 1, len(p0))
-        p0 = p0 + noise
+    while p[10] < 0:
+        noise = np.asarray([np.random.default_rng().normal(p_i, p_i * 0.1) for p_i in p0])
+        p = p0 + noise
 
-    return p0
+    return p
 
 
 def glycolysis_model(t, p, x=None):
@@ -54,7 +54,7 @@ def glycolysis_model(t, p, x=None):
 
     def f(x, t):
         """Glycolysis ODE model."""
-        v1 = k1 * x[0] * x[5] / max((1 + (x[5] / K1) ** q), 0.001)
+        v1 = k1 * x[0] * x[5] / max((1 + (x[5] / max(K1, 0.001)) ** q), 0.001)
         v2 = k2 * x[1] * (N - x[4])
         v3 = k3 * x[2] * (A - x[5])
         v4 = k4 * x[3] * x[4]
