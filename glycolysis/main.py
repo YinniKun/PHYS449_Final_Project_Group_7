@@ -22,11 +22,44 @@ def calculate_weights(loss_values):
     # find smallest order of magnitude in list of losses
     loss_magnitudes = [math.floor(math.log(loss.item(), 10)) for loss in loss_values]
     weights = np.asarray([10 ** x for x in loss_magnitudes])
-
+    weights = 1 / weights
     if len(weights) == 1:
         return weights[0]
     else:
         return weights
+
+def update_p_vals(data_class, model, p):
+    """
+    returns the state vector for use in the ode loss
+    :param data_class: Data class instance
+    :param model: the nn model class
+    :param p: current network estimate of p
+    :return: python list specifying the state vectors at the ode loss times
+    """
+
+    states_all_t = [model.forward(t) for t in data_class.ode_inputs]
+    states_np = np.asarray([state.cpu().detach().numpy() for state in states_all_t])  # shape (n_ode, 7)
+
+    dx_dt = np.asarray([np.gradient(states_np[:, i]) for i in range(states_np[0].size)])  # shape (7, n_ode)
+
+    # Need to find the loss of the inner sum to find the weights w for the gradient descent update rule
+    inner_loss = np.zeros(7)  # this holds the inner losses for each s species
+    grad_update = np.zeros(14)  # how much to update each value of p
+    for t_ind, t in enumerate(data_class.ode_inputs):
+        f = np.asarray(get_data.glycolysis_model([t], p, states_np[t_ind]))
+        inner_loss += (dx_dt[:, t_ind] - f) ** 2
+
+
+    inner_loss = inner_loss / data_class.ode_inputs.size  # scale inner loss by number of ode inputs
+    weights = np.asarray(calculate_weights(inner_loss))
+
+    # calculate gradient descent steps
+    for t_ind, t in enumerate(data_class.ode_inputs):
+        f = np.asarray(get_data.glycolysis_model([t], p, states_np[t_ind]))
+        grad_f = np.asarray(get_data.grad_glycolysis_model(t, p, states_np[t_ind]))
+        grad_update += np.asarray([np.sum(2 * f * df_dp_i * weights / data_class.ode_inputs.size) for df_dp_i in grad_f])
+
+    return grad_update, np.sum(inner_loss * weights)
 
 
 def weighted_loss(inputs, labels, loss, model, num_conc):
@@ -60,6 +93,7 @@ def run_nn(param, model, data):
     learning_rate = param['optim']['learning_rate']
     s = param['data']['num_species_tot']
     m = param['data']['num_species_measured']
+    p = get_data.guess_p()
 
     # should put a flag somewhere (maybe in the Data class) to indicate if the data is noiseless or noisy
     # Statements for noisy/noiseless flag, make the noisy/noiseless part of the .json and include in data param??
@@ -108,6 +142,7 @@ def run_nn(param, model, data):
         for loss in summed_data_losses[1:]:
             data_loss_total = torch.add(data_loss_total, loss)
 
+
         # calculate auxiliary loss for all species
         for y in range(0, s):
             # get losses for each time point
@@ -137,8 +172,8 @@ def run_nn(param, model, data):
             Epoch {x}/{epoch_init_iter}: \t loss: {loss_tot} \n")
     print(f"Initial Data and Aux Training:\t Done")
 
-    """# then loop through full iterations training all loss
-    for x in range(0, epoch_init_iter - 1):
+    # then loop through full iterations training all loss
+    for x in range(int(epoch_full_iter)):
         summed_data_losses = []
         summed_aux_losses = []
 
@@ -160,11 +195,6 @@ def run_nn(param, model, data):
         for loss in summed_data_losses[1:]:
             data_loss_total = torch.add(data_loss_total, loss)
 
-        # calculate ode loss for all species
-        for y in range(0, s):
-            losses_ode_conc = weighted_loss(data.ode_inputs, data.ode_labels, mean_square_loss, model)
-            losses_ode_concs = losses_ode_concs.append(losses_ode_conc)
-        ode_loss_tot = losses_ode_concs.sum()
 
         # calculate auxiliary loss for all species
         for y in range(0, s):
@@ -188,10 +218,13 @@ def run_nn(param, model, data):
         loss_tot = data_loss_total + aux_loss_tot
 
         model.backprop(loss_tot, optimizer)
-        """
 
-    # need to replace data.data_inputs, data.data_labels, data.ode_state, etc. with actual data variables
-
+        # update p using ode loss
+        d_ode_loss_dp, ode_loss = update_p_vals(data, model, p)
+        p = p + learning_rate * d_ode_loss_dp
+        print(f'loss_tot no ode: {loss_tot.item()}')
+        print(f'ode_loss: {ode_loss}')
+        print(f'p_after: {p}')
 
 
 if __name__ == '__main__':
@@ -207,10 +240,7 @@ if __name__ == '__main__':
 
     data = get_data.Data(params['data'], n_points=num_data_points)
     data.save_as_csv()
-
-    model = Net(7)  # need to figure out the parameters to send to this, using 1 as dummy parameter.
-                    # Should it be 128, because NN width in paper is 128 for glycolysis?
-                    # also where do the 7 feature layers fit in?
+    model = Net(7)
     model.double()
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
