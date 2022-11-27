@@ -20,7 +20,7 @@ def calculate_weights(loss_values):
     """
     loss_values = np.asarray(loss_values)
     # find smallest order of magnitude in list of losses
-    loss_magnitudes = [math.floor(math.log(loss.item(), 10)) for loss in loss_values]
+    loss_magnitudes = [math.floor(math.log(loss, 10)) for loss in loss_values]
     weights = np.asarray([10 ** x for x in loss_magnitudes])
     weights = 1 / weights
     if len(weights) == 1:
