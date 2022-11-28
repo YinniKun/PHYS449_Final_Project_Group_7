@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 import torch
+from datetime import datetime
 
 import numpy as np
 import torch.optim as optim
@@ -59,7 +60,7 @@ def update_p_vals(data_class, model, p):
         grad_f = np.asarray(get_data.grad_glycolysis_model(t, p, states_np[t_ind]))
         grad_update += np.asarray([np.sum(2 * f * df_dp_i * weights / data_class.ode_inputs.size) for df_dp_i in grad_f])
 
-    return grad_update, np.sum(inner_loss * weights)
+    return grad_update, np.sum(inner_loss * weights), states_np
 
 
 def weighted_loss(inputs, labels, loss, model, num_conc):
@@ -90,13 +91,25 @@ def run_nn(param, model, data):
     :param data: class containing the training and test data
     :return: ?
     """
+    now = datetime.now()
+    date_time = now.strftime("%m-%d %H:%M:%S")
     learning_rate = param['optim']['learning_rate']
     s = param['data']['num_species_tot']
     m = param['data']['num_species_measured']
     p = get_data.guess_p()
 
-    loss_plot_path = f'plot_data.txt'
-    with open(loss_plot_path, 'w+') as file:
+    init_loss_path = f'init_training_loss_data_{date_time}.txt'
+    p_track_path = f'p_versus_epochs_{date_time}.txt'
+    conc_track_path = f'network_conc_{date_time}.txt'
+    all_loss_track_path = f'all_losses_{date_time}.txt'
+
+    with open(init_loss_path, 'w+') as file:
+        pass
+    with open(p_track_path, 'w+') as file:
+        pass
+    with open(conc_track_path, 'w+') as file:
+        pass
+    with open(all_loss_track_path, 'w+') as file:
         pass
 
     # should put a flag somewhere (maybe in the Data class) to indicate if the data is noiseless or noisy
@@ -175,9 +188,10 @@ def run_nn(param, model, data):
             print(f"Initial Data and Aux Training:\t \
             Epoch {x}/{epoch_init_iter}: \t loss: {loss_tot} \n")
 
-        with open(loss_plot_path, 'a') as graph_data:
-            p_string = " ".join([str(x) for x in p])
-            graph_data.write(f'{p_string}\t {0}\t {data_loss_total}\t {aux_loss_total}\t {x}\n')
+        if x % 10 == 0:  # track initial losses (just data and auxiliary) at 100 points
+            with open(init_loss_path, 'a') as graph_data:
+                # format is [data_loss aux_loss epoch] for each line
+                graph_data.write(f'{data_loss_total}\t {aux_loss_total}\t {x}\n')
 
     print(f"Initial Data and Aux Training:\t Done")
 
@@ -229,15 +243,29 @@ def run_nn(param, model, data):
         model.backprop(loss_tot, optimizer)
 
         # update p using ode loss
-        d_ode_loss_dp, ode_loss = update_p_vals(data, model, p)
+        d_ode_loss_dp, ode_loss, network_predicted_states = update_p_vals(data, model, p)
         p = p + learning_rate * d_ode_loss_dp
-        print(f'loss_tot no ode: {loss_tot.item()}')
-        print(f'ode_loss: {ode_loss}')
-        print(f'p_after: {p}')
+        if x % 500 == 0:
+            print(f'loss_tot no ode: {loss_tot.item()}')
+            print(f'ode_loss: {ode_loss}')
+            print(f'p_after: {p}')
 
-        with open(loss_plot_path, 'a') as graph_data:
-            p_string = " ".join([str(x) for x in p])
-            graph_data.write(f'{p_string}\t {ode_loss}\t {data_loss_total}\t {aux_loss_total}\t {x}\n')
+        if x % 1000 == 0:  # track p and losses every 1000 epochs
+            with open(all_loss_track_path, 'a') as graph_data:
+                # format is [data_loss aux_loss ode loss epoch] for each line
+                graph_data.write(f'{data_loss_total}\t {aux_loss_total}\t {ode_loss}\t{x}\n')
+
+            with open(p_track_path, 'a') as graph_data:
+                # format is [p0 p1 p2 p3 ..... p14] for each line
+                p_string = " ".join([str(x) for x in p])
+                graph_data.write(f'{p_string}\t{x}\n')
+
+        if x % 5000 == 0:  # track network concentration predictions every 5000 epochs
+            with open(conc_track_path, 'a') as graph_data:
+                # format is [t S1 S2 S3 S4 S5 S6 S7] for each line.
+                for i, prediction in enumerate(network_predicted_states):
+                    line_string = ' '.join([str(data.data_inputs[i]) + " " + ' '.join([str(x) for x in prediction])])
+                    graph_data.write(f'{line_string}\n')
 
 
 if __name__ == '__main__':
