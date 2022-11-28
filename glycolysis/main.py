@@ -1,5 +1,6 @@
 # main file for glycolysis
 
+import os
 import argparse
 import json
 import math
@@ -279,10 +280,13 @@ if __name__ == '__main__':
 
     num_data_points = params['data']['num_data_points']
 
+    data_dir = f'{os.path.dirname(__file__)}{os.sep}data'
+    if not os.path.isdir(data_dir):
+        print(f'Created directory: {data_dir}')
+        os.mkdir(data_dir)
     data = get_data.Data(params['data'], n_points=num_data_points)
     data.save_as_csv()
     model = Net(7)
     model.double()
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
-
