@@ -93,16 +93,16 @@ def run_nn(param, model, data):
     :return: ?
     """
     now = datetime.now()
-    date_time = now.strftime("%m-%d %H:%M:%S")
+    date_time = now.strftime("%m-%d %H%M%S")
     learning_rate = param['optim']['learning_rate']
     s = param['data']['num_species_tot']
     m = param['data']['num_species_measured']
     p = get_data.guess_p()
 
-    init_loss_path = f'init_training_loss_data_{date_time}.txt'
-    p_track_path = f'p_versus_epochs_{date_time}.txt'
-    conc_track_path = f'network_conc_{date_time}.txt'
-    all_loss_track_path = f'all_losses_{date_time}.txt'
+    init_loss_path = f'data/init_training_loss_data_{date_time}.txt'
+    p_track_path = f'data/p_versus_epochs_{date_time}.txt'
+    conc_track_path = f'data/network_conc_{date_time}.txt'
+    all_loss_track_path = f'data/all_losses_{date_time}.txt'
 
     with open(init_loss_path, 'w+') as file:
         pass
