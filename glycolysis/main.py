@@ -95,6 +95,10 @@ def run_nn(param, model, data):
     m = param['data']['num_species_measured']
     p = get_data.guess_p()
 
+    loss_plot_path = f'plot_data.txt'
+    with open(loss_plot_path, 'w+') as file:
+        pass
+
     # should put a flag somewhere (maybe in the Data class) to indicate if the data is noiseless or noisy
     # Statements for noisy/noiseless flag, make the noisy/noiseless part of the .json and include in data param??
     if param['data']['noisy?']:
@@ -170,6 +174,11 @@ def run_nn(param, model, data):
         if not x % (epoch_init_iter / 10):
             print(f"Initial Data and Aux Training:\t \
             Epoch {x}/{epoch_init_iter}: \t loss: {loss_tot} \n")
+
+        with open(loss_plot_path, 'a') as graph_data:
+            p_string = " ".join([str(x) for x in p])
+            graph_data.write(f'{p_string}\t {0}\t {data_loss_total}\t {aux_loss_total}\t {x}\n')
+
     print(f"Initial Data and Aux Training:\t Done")
 
     # then loop through full iterations training all loss
@@ -225,6 +234,10 @@ def run_nn(param, model, data):
         print(f'loss_tot no ode: {loss_tot.item()}')
         print(f'ode_loss: {ode_loss}')
         print(f'p_after: {p}')
+
+        with open(loss_plot_path, 'a') as graph_data:
+            p_string = " ".join([str(x) for x in p])
+            graph_data.write(f'{p_string}\t {ode_loss}\t {data_loss_total}\t {aux_loss_total}\t {x}\n')
 
 
 if __name__ == '__main__':
