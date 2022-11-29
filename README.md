@@ -7,30 +7,41 @@ Origninal paper from Yazdani A, Lu L, Raissi M, Karniadakis GE. Systems biology 
 This repo contains the code and data to recreate the work by Yazdani et al., 2020. In their work, Yazdani et al. utilized deep learning to determie the parameters for systems biology models.
 
 ## File structure
-Three models are tested and validated with the neural network architecture, each with a ``main.py`` that is used to train the model and utilizes ``plot.py`` to generate plots from the results. There are also two source files ``nn_gen.py`` and ``data_gen.py`` that contains the neutral network architecture and the code for generating the data for training. 
+Three models are tested and validated with the neural network architecture, each with a ``main.py`` that is used to train the model and utilizes ``plot.py`` to generate plots from the results. There are also two source files ``nn_gen.py`` and ``data_gen.py`` that contains the neutral network architecture and the code for generating the data for training in the ``./src/`` directory. Lastly, a ``param.json`` can also be found in the ``./src/`` direcotry that contains all the necessary hyperparameters.
 
 The file structre is outlined below:
 
 - ~/apoptosis
   - main.py
-  - /src
+  - plot.py
+  - ./src/
     - data_gen.py
     - nn_gen.py
+    - param.json
 - ~/glycolysis
   - main.py
-  - /src
+  - plot.py
+  - ./src/
     - data_gen.py
     - nn_gen.py
+    - param.json
 - ~/insulin
   - main.py
-  - /src
+  - plot.py
+  - ./src/
     - data_gen.py
     - nn_gen.py
+    - param.json
 
 ## Dependencies
-- sys, argparse
+- sys, argparse, os
+- math
 - numpy
 - torch
 - matplotlib.pyplot
 
 ## Running each model
+
+To run each model, go to the directory of the model, and use:
+
+``python3 main.py``
