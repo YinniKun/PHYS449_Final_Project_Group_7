@@ -28,7 +28,7 @@ class Net(nn.Module):
         self.fc4= nn.Linear(128, n_output)
 
         ## average concentration for each species
-        self.ode_mean = np.mean(data.conc, axis=0)
+        self.ode_mean = torch.from_numpy(np.mean(data.conc, axis=0))
 
     def feature(self, t):
         """
@@ -48,13 +48,13 @@ class Net(nn.Module):
             ])
 
     # Feedforward function
-    def forward(self, t, t_max=10, ode_mean=10):
+    def forward(self, t, t_max=10):
         f1 = self.feature(t)
         in_scal = f1 / t_max
         h1 = func.silu(self.fc1(in_scal))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
-        y = func.silu(self.fc4(h3))* torch.from_numpy(self.ode_mean)
+        y = func.silu(self.fc4(h3)) * self.ode_mean
         return y
 
     # Reset function for the training weights
