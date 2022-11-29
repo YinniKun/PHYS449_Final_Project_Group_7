@@ -2,6 +2,7 @@
 
 import math
 import numpy as np
+import data_gen as data 
 
 import torch
 import torch.nn as nn
@@ -18,7 +19,7 @@ class Net(nn.Module):
             scaling layer
         t_max = the max time point t in the input scaling layer
     '''
-    def __init__(self, n_output):
+    def __init__(self, n_output,data):
         super(Net, self).__init__()
         self.fc1= nn.Linear(7, 128)
         self.fc2= nn.Linear(128, 128)
