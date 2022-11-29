@@ -21,9 +21,9 @@ do_plot_loss_vs_epoch = False
 loss_file = 'data/all_losses_11-28 203141.txt'
 
 # File name of concentrations to plot vs measured/true data over time.
-do_plot_conc_from_file = False
+do_plot_conc_from_file = True
 conc_file = 'data/network_conc_11-28 203141.txt'
-entry = -1  # Index of the entry to plot, since the file may have many epochs.
+entry = 5  # Index of the entry to plot, since the file may have many epochs.
 
 # Predicted p for generating concentrations to plot vs measured/true data over
 # time (can be a list of float or a whitespace separated string).
@@ -133,13 +133,14 @@ def plot_p_vs_true_p(p, input_name):
     plt.savefig(f'plots/pred_p_vs_true_{input_name}.pdf', bbox_inches='tight')
 
 
-def plot_conc_from_file(true_conc, pred_conc, input_name, index=-1):
+def plot_conc_from_file(true_conc, meas_conc, pred_conc, input_name, index=-1):
     """Plot predicted concentrations from p vs measured/true data over time.
 
     Generate one figure with subplots of the concentration of each chemical
     species. Plot is named network_conc_vs_true_input_name_index.pdf.
 
     :param true_conc: (num_data_points, S+1) array of time and true concs
+    :param meas_conc: (num_data_points, S+1) array of time and measured concs
     :param pred_conc: (num_data_points, S+1) array of time and predicted concs
     :param input_name: name to append to end of plot name
     :param index: index of conc_file entry (default is last entry)
@@ -148,8 +149,8 @@ def plot_conc_from_file(true_conc, pred_conc, input_name, index=-1):
     fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(14, 24),
                             constrained_layout=True)
 
-    # Infer number of chemical species.
-    n_species = len(pred_conc[0, :]) - 1
+    measured = [4, 5]  # Measured species (indexed at zero).
+    n_species = len(pred_conc[0, :]) - 1   # Infer number of chemical species.
 
     # Tuple of indices when a new entry of concentrations begin.
     entry_boundaries = np.where(pred_conc[:, 0] == pred_conc[:, 0][0])[0]
@@ -170,8 +171,12 @@ def plot_conc_from_file(true_conc, pred_conc, input_name, index=-1):
         row, col = get_row_col(ind)
 
         # Plot.
-        axs[row, col].plot(true_conc[:, 0], true_conc[:, ind + 1],
-                           color='b', label='Exact')
+        if ind in measured:
+            axs[row, col].plot(meas_conc[:, 0], meas_conc[:, ind + 1],
+                               color='b', label='Exact')
+        else:
+            axs[row, col].plot(true_conc[:, 0], true_conc[:, ind + 1],
+                               color='b', label='Exact')
         axs[row, col].plot(pred_conc[:, 0][start:stop],
                            pred_conc[:, ind + 1][start:stop],
                            color='r', linestyle='dashdot', label='Learned')
@@ -199,21 +204,29 @@ def plot_conc_from_p(true_conc, pred_conc, input_name):
 
     Generate one figure with subplots of the concentration of each chemical
     species. Plot is named pred_conc_from_p_vs_true_input_name.pdf.
+
     :param true_conc: (num_data_points, S+1) array of time and true concs
+    :param meas_conc: (num_data_points, S+1) array of time and measured concs
     :param pred_conc: (num_data_points, S) array of predicted concs
     :param input_name: name to append to end of plot name
 
     """
     fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(14, 24),
                             constrained_layout=True)
-    n_species = 7
+    measured = [4, 5]  # Measured species (indexed at zero).
+    n_species = len(pred_conc[0, :]) - 1   # Infer number of chemical species.
+
     for ind in range(n_species):
 
         row, col = get_row_col(ind)
 
         # Plot.
-        axs[row, col].plot(true_conc[:, 0], true_conc[:, ind + 1],
-                           color='b', label='Exact')
+        if ind in measured:
+            axs[row, col].plot(meas_conc[:, 0], meas_conc[:, ind + 1],
+                               color='b', label='Exact')
+        else:
+            axs[row, col].plot(true_conc[:, 0], true_conc[:, ind + 1],
+                               color='b', label='Exact')
         axs[row, col].plot(true_conc[:, 0], pred_conc[:, ind],
                            color='r', linestyle='dashdot', label='Learned')
         # Configure subplot.
@@ -244,6 +257,7 @@ def get_name(file):
     """Get component of file name that follows the final underscore."""
     return os.path.splitext(os.path.basename(file))[0].split('_')[-1]
 
+
 if __name__ == '__main__':
 
     plots_dir = f'{os.path.dirname(__file__)}{os.sep}plots'
@@ -265,18 +279,22 @@ if __name__ == '__main__':
         p = np.loadtxt(p_file)
         plot_p_vs_true_p(p, get_name(p_file))
 
-    # Only read true concentration once if it is needed.
-    # !!!!!!!! Still need to get the measured data with noise somehow !!!!!!!!!!!
+    # Only read true/measured concentration once if it is needed.
     if do_plot_conc_from_file or do_plot_conc_from_p:
         # Shape (num_data_points, S+1) with first column time (min).
-        true_conc = np.loadtxt('data/true_conc.txt', delimiter='\t', skiprows=1)
+        true_conc = np.loadtxt('data/true_conc.txt',
+                               delimiter='\t', skiprows=1)
+        # Shape (num_data_points, S+1) with first column time (min).
+        meas_conc = np.loadtxt('data/true_conc.txt',
+                               delimiter='\t', skiprows=1)
 
     if do_plot_conc_from_file:
         if not os.path.isfile(f'{conc_file}'):
             raise ValueError(f'Cannot find conc_file {conc_file}')
         # Shape (num_data_points, S) with first column time (min).
         pred_conc = np.loadtxt(conc_file)
-        plot_conc_from_file(true_conc, pred_conc, get_name(conc_file), index=entry)
+        plot_conc_from_file(true_conc, meas_conc, pred_conc,
+                            get_name(conc_file), index=entry)
 
     if do_plot_conc_from_p:
         if type(p) == str:
@@ -286,4 +304,4 @@ if __name__ == '__main__':
             raise ValueError(f'In do_plot_conc_from_p, {msg}')
         # Shape (num_data_points, S).
         pred_conc = get_data.glycolysis_model(true_conc[:, 0], p)
-        plot_conc_from_p(true_conc, pred_conc, get_name(p_name))
+        plot_conc_from_p(true_conc, meas_conc, pred_conc, get_name(p_name))
