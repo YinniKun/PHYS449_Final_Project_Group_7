@@ -1,5 +1,6 @@
 # main file for glycolysis
 
+import os
 import argparse
 import json
 import math
@@ -92,16 +93,16 @@ def run_nn(param, model, data):
     :return: ?
     """
     now = datetime.now()
-    date_time = now.strftime("%m-%d %H:%M:%S")
+    date_time = now.strftime("%m-%d %H%M%S")
     learning_rate = param['optim']['learning_rate']
     s = param['data']['num_species_tot']
     m = param['data']['num_species_measured']
     p = get_data.guess_p()
 
-    init_loss_path = f'init_training_loss_data_{date_time}.txt'
-    p_track_path = f'p_versus_epochs_{date_time}.txt'
-    conc_track_path = f'network_conc_{date_time}.txt'
-    all_loss_track_path = f'all_losses_{date_time}.txt'
+    init_loss_path = f'data/init_training_loss_data_{date_time}.txt'
+    p_track_path = f'data/p_versus_epochs_{date_time}.txt'
+    conc_track_path = f'data/network_conc_{date_time}.txt'
+    all_loss_track_path = f'data/all_losses_{date_time}.txt'
 
     with open(init_loss_path, 'w+') as file:
         pass
@@ -279,10 +280,13 @@ if __name__ == '__main__':
 
     num_data_points = params['data']['num_data_points']
 
+    data_dir = f'{os.path.dirname(__file__)}{os.sep}data'
+    if not os.path.isdir(data_dir):
+        print(f'Created directory: {data_dir}')
+        os.mkdir(data_dir)
     data = get_data.Data(params['data'], n_points=num_data_points)
     data.save_as_csv()
     model = Net(7)
     model.double()
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
-

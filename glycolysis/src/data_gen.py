@@ -206,7 +206,7 @@ class Data(Dataset):
     def save_as_csv(self):
         """Save time and concentrations to data.csv file."""
         head = ['t', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7']
-        np.savetxt('src/data.csv',
+        np.savetxt('data/true_conc.txt',
                    np.hstack((self.time[:, None], self.conc)),
                    header='\t'.join(head),
                    delimiter='\t',
