@@ -42,26 +42,26 @@ def update_p_vals(data_class, model, p):
     states_all_t = [model.forward(t) for t in data_class.ode_inputs]
     states_np = np.asarray([state.cpu().detach().numpy() for state in states_all_t])  # shape (n_ode, 7)
 
-    dx_dt = np.asarray([np.gradient(states_np[:, i]) for i in range(states_np[0].size)])  # shape (7, n_ode)
+    sgd_index = np.random.default_rng().integers(low=0, high=states_np[:, 0].size - 6, size=1)
+    grad_indexes = np.asarray(list(range(sgd_index[0], sgd_index[0]+5)))
+
+    dx_dt = np.asarray([np.gradient(states_np[grad_indexes, i]) for i in range(states_np[0].size)])  # shape (7, 5)
+
 
     # Need to find the loss of the inner sum to find the weights w for the gradient descent update rule
     inner_loss = np.zeros(7)  # this holds the inner losses for each s species
     grad_update = np.zeros(14)  # how much to update each value of p
-    for t_ind, t in enumerate(data_class.ode_inputs):
-        f = np.asarray(get_data.glycolysis_model([t], p, states_np[t_ind]))
-        inner_loss += (dx_dt[:, t_ind] - f) ** 2
+    t = data_class.ode_inputs[sgd_index]
+    f = np.asarray(get_data.glycolysis_model([t], p, states_np[sgd_index][0]))
+    inner_loss += (dx_dt[:, 0] - f) ** 2
 
-
-    inner_loss = inner_loss / data_class.ode_inputs.size  # scale inner loss by number of ode inputs
     weights = np.asarray(calculate_weights(inner_loss))
 
     # calculate gradient descent steps
-    for t_ind, t in enumerate(data_class.ode_inputs):
-        f = np.asarray(get_data.glycolysis_model([t], p, states_np[t_ind]))
-        grad_f = np.asarray(get_data.grad_glycolysis_model(t, p, states_np[t_ind]))
-        grad_update += np.asarray([np.sum(2 * f * df_dp_i * weights / data_class.ode_inputs.size) for df_dp_i in grad_f])
+    grad_f = np.asarray(get_data.grad_glycolysis_model(t, p, states_np[sgd_index][0]))
+    grad_update += np.asarray([np.sum(2 * f * df_dp_i * weights) for df_dp_i in grad_f])
 
-    return grad_update, np.sum(inner_loss * weights), states_np
+    return grad_update, inner_loss * weights, states_np
 
 
 def weighted_loss(inputs, labels, loss, model, num_conc):
@@ -246,7 +246,7 @@ def run_nn(param, model, data):
         # update p using ode loss
         d_ode_loss_dp, ode_loss, network_predicted_states = update_p_vals(data, model, p)
         p = p + learning_rate * d_ode_loss_dp
-        if x % 500 == 0:
+        if x % 5 == 0:
             print(f'loss_tot no ode: {loss_tot.item()}')
             print(f'ode_loss: {ode_loss}')
             print(f'p_after: {p}')
@@ -286,7 +286,7 @@ if __name__ == '__main__':
         os.mkdir(data_dir)
     data = get_data.Data(params['data'], n_points=num_data_points)
     data.save_as_csv()
-    model = Net(7)
+    model = Net(7, data)
     model.double()
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
