@@ -27,9 +27,7 @@ class Net(nn.Module):
         self.fc3= nn.Linear(128, 128)
         self.fc4= nn.Linear(128, n_output)
 
-        ## average concentration
-        #concentration = np.compress([False, True], data.conc, axis = 2)
-        #reshape_concentration = np.reshape(concentration, (7,len(concentration[0])))
+        ## average concentration for each species
         self.ode_mean = np.mean(data.conc, axis=0)
 
     def feature(self, t):
@@ -68,8 +66,6 @@ class Net(nn.Module):
         self.fc4.reset_parameters()
 
     # Backpropagation function
-     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
-    #   ode_mean should be a 1xn vector
     def backprop(self, loss, optimizer):
         self.train()
         optimizer.zero_grad()
