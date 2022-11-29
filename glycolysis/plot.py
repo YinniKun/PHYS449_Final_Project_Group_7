@@ -21,7 +21,7 @@ do_plot_loss_vs_epoch = False
 loss_file = 'data/all_losses_11-28 203141.txt'
 
 # File name of concentrations to plot vs measured/true data over time.
-do_plot_conc_from_file = True
+do_plot_conc_from_file = False
 conc_file = 'data/network_conc_11-28 203141.txt'
 entry = 5  # Index of the entry to plot, since the file may have many epochs.
 
@@ -173,7 +173,9 @@ def plot_conc_from_file(true_conc, meas_conc, pred_conc, input_name, index=-1):
         # Plot.
         if ind in measured:
             axs[row, col].plot(meas_conc[:, 0], meas_conc[:, ind + 1],
-                               color='b', label='Exact')
+                               color='b', label='Exact',
+                               marker='o', markersize=3, linestyle='None')
+            print()
         else:
             axs[row, col].plot(true_conc[:, 0], true_conc[:, ind + 1],
                                color='b', label='Exact')
