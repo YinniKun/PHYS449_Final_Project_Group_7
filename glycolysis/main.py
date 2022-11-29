@@ -12,7 +12,7 @@ import torch.optim as optim
 
 import src.data_gen as get_data
 from src.nn_gen import Net
-
+from numba import jit
 
 def calculate_weights(loss_values):
     """
@@ -30,6 +30,7 @@ def calculate_weights(loss_values):
     else:
         return weights
 
+@jit
 def update_p_vals(data_class, model, p):
     """
     returns the state vector for use in the ode loss
