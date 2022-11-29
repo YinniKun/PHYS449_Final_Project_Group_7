@@ -186,7 +186,7 @@ class Data(Dataset):
         # Create noise and apply to correct concentration time points
         if noisy_bool:
             conc_tr = np.transpose(self.conc)
-            mu_conc = [np.std(x) for x in conc_tr[4:5]]
+            mu_conc = [np.std(x) for x in conc_tr[4:6]]
             conc_noise = np.empty((2000, 2))
             for i in range(0, conc_tr[0].size):
                 conc_noise[i] = np.asarray([np.random.default_rng().normal(0, 0.1 * mu) for mu in mu_conc])
