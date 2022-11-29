@@ -42,10 +42,9 @@ def update_p_vals(data_class, model, p):
     states_all_t = [model.forward(t) for t in data_class.ode_inputs]
     states_np = np.asarray([state.cpu().detach().numpy() for state in states_all_t])  # shape (n_ode, 7)
 
-    sgd_index = np.random.default_rng().integers(low=0, high=states_np[:, 0].size - 6, size=1)
-    grad_indexes = np.asarray(list(range(sgd_index[0], sgd_index[0]+5)))
+    sgd_index = np.random.default_rng().integers(low=0, high=states_np[:, 0].size, size=1)
 
-    dx_dt = np.asarray([np.gradient(states_np[grad_indexes, i]) for i in range(states_np[0].size)])  # shape (7, 5)
+    dx_dt = np.asarray([np.gradient(states_np[:, i]) for i in range(states_np[0].size)])  # shape (7, 5)
 
 
     # Need to find the loss of the inner sum to find the weights w for the gradient descent update rule
@@ -53,7 +52,7 @@ def update_p_vals(data_class, model, p):
     grad_update = np.zeros(14)  # how much to update each value of p
     t = data_class.ode_inputs[sgd_index]
     f = np.asarray(get_data.glycolysis_model([t], p, states_np[sgd_index][0]))
-    inner_loss += (dx_dt[:, 0] - f) ** 2
+    inner_loss += (dx_dt[:, sgd_index[0]] - f) ** 2
 
     weights = np.asarray(calculate_weights(inner_loss))
 
