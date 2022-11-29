@@ -174,7 +174,9 @@ def plot_conc_from_file(true_conc, meas_conc, pred_conc, input_name, index=-1):
         # Plot.
         if ind in measured:
             axs[row, col].plot(meas_conc[:, 0], meas_conc[:, ind + 1],
-                               color='b', label='Exact')
+                               color='b', label='Exact',
+                               marker='o', markersize=3, linestyle='None')
+            print()
         else:
             axs[row, col].plot(true_conc[:, 0], true_conc[:, ind + 1],
                                color='b', label='Exact')
