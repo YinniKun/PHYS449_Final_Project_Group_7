@@ -1,6 +1,7 @@
 # Plot the glycolysis model.
 
 import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import math
 
 import numpy as np
@@ -13,23 +14,23 @@ import src.data_gen as get_data
 # ****************************************************************************
 
 # File name of predicted p to plot vs true p over epochs.
-do_plot_p_vs_epoch = False
-p_file = 'data/p_versus_epochs_11-28 203141.txt'
+do_plot_p_vs_epoch = True
+p_file = 'data/p_versus_epochs_11-29 135348.txt'
 
 # File name file of losses to plot over epochs.
-do_plot_loss_vs_epoch = False
-loss_file = 'data/all_losses_11-28 203141.txt'
+do_plot_loss_vs_epoch = True
+loss_file = 'data/all_losses_11-29 135348.txt'
 
 # File name of concentrations to plot vs measured/true data over time.
 do_plot_conc_from_file = True
-conc_file = 'data/network_conc_11-28 203141.txt'
-entry = 5  # Index of the entry to plot, since the file may have many epochs.
+conc_file = 'data/network_conc_11-29 135348.txt'
+entry = -1  # Index of the entry to plot, since the file may have many epochs.
 
 # Predicted p for generating concentrations to plot vs measured/true data over
 # time (can be a list of float or a whitespace separated string).
 do_plot_conc_from_p = False
 p = '-0.6762044145348005 106.23339162161375 35.28790351907249 57.64332159931993 132.96802797215415 2.2439889854315402 13.39090120928569 2.5826227671061948 40.656343141279045 7.215781778386592 7.345766312761084 38.875775469197265 35.08737720011627 57.81059180122517'
-p_name = '11-28 203141'
+p_name = '11-29 135348'
 
 # ****************************************************************************
 # Constants.
