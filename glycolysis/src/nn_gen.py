@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import data_gen as data 
 
 from src.data_gen import *
 
