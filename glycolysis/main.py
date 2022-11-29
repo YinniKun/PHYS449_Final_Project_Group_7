@@ -13,6 +13,8 @@ import torch.optim as optim
 import src.data_gen as get_data
 from src.nn_gen import Net
 from numba import jit
+import warnings
+
 
 def calculate_weights(loss_values):
     """
@@ -30,7 +32,6 @@ def calculate_weights(loss_values):
     else:
         return weights
 
-@jit
 def update_p_vals(data_class, model, p):
     """
     returns the state vector for use in the ode loss
@@ -76,7 +77,7 @@ def weighted_loss(inputs, labels, loss, model, num_conc):
     """
     loss_values = []
     for inc, x in enumerate(inputs):
-        label = torch.from_numpy(np.asarray([labels[inc]]))
+        label = torch.from_numpy(np.asarray([labels[inc]])).to(dev)
         loss_value = loss(model.forward(x)[num_conc], label)
         loss_values.append(loss_value)
     loss_sum = sum([x.item() for x in loss_values])
@@ -271,6 +272,7 @@ def run_nn(param, model, data):
 
 
 if __name__ == '__main__':
+    warnings.filterwarnings("ignore")
     parser = argparse.ArgumentParser()
     parser.add_argument('--param', default="src/param.json", help='json parameter file relative path', type=str)
     parser.add_argument('--data_seed', help='Random seed for generating training data', type=int)

@@ -20,6 +20,7 @@ class Net(nn.Module):
     '''
     def __init__(self, n_output):
         super(Net, self).__init__()
+        self.dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.fc1= nn.Linear(7, 128)
         self.fc2= nn.Linear(128, 128)
         self.fc3= nn.Linear(128, 128)
@@ -44,12 +45,12 @@ class Net(nn.Module):
 
     # Feedforward function
     def forward(self, t, t_max=10, ode_mean=10):
-        f1 = self.feature(t)
+        f1 = self.feature(t).to(self.dev)
         in_scal = f1 / t_max
         h1 = func.silu(self.fc1(in_scal))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
-        y = func.silu(self.fc4(h3))* ode_mean
+        y = func.silu(self.fc4(h3)) * ode_mean
         return y
 
     # Reset function for the training weights
