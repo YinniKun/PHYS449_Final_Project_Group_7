@@ -246,7 +246,7 @@ def run_nn(param, model, data):
         # update p using ode loss
         d_ode_loss_dp, ode_loss, network_predicted_states = update_p_vals(data, model, p)
         p = p + learning_rate * d_ode_loss_dp
-        if x % 5 == 0:
+        if x % 500 == 0:
             print(f'loss_tot no ode: {loss_tot.item()}')
             print(f'ode_loss: {ode_loss}')
             print(f'p_after: {p}')
