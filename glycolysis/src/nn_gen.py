@@ -18,12 +18,17 @@ class Net(nn.Module):
             scaling layer
         t_max = the max time point t in the input scaling layer
     '''
-    def __init__(self, n_output):
+    def __init__(self, n_output,data):
         super(Net, self).__init__()
         self.fc1= nn.Linear(7, 128)
         self.fc2= nn.Linear(128, 128)
         self.fc3= nn.Linear(128, 128)
         self.fc4= nn.Linear(128, n_output)
+
+        ## average concentration
+        concentration = np.compress([False, True], data.datalabels, axis = 2)
+        reshape_concentration = np.reshape(concentration, (7,len(concentration[0])))
+        self.ode_mean = np.mean(reshape_concentration, axis=1)
 
     def feature(self, t):
         """
@@ -49,7 +54,7 @@ class Net(nn.Module):
         h1 = func.silu(self.fc1(in_scal))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
-        y = func.silu(self.fc4(h3))* ode_mean
+        y = func.silu(self.fc4(h3))* self.ode_mean
         return y
 
     # Reset function for the training weights

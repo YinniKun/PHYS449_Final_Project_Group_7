@@ -287,7 +287,7 @@ if __name__ == '__main__':
     data = get_data.Data(params['data'], n_points=num_data_points)
     # Write true and measured concentrations to file.
     data.save_as_txt()
-    model = Net(7)
+    model = Net(7,data)
     model.double()
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
