@@ -20,7 +20,7 @@ class Net(nn.Module):
     '''
     def __init__(self, n_species, data):
         super(Net, self).__init__()
-        self.fc1= nn.Linear(n_species, 256)
+        self.fc1= nn.Linear(2, 256)
         self.fc2= nn.Linear(256, 256)
         self.fc3= nn.Linear(256, 256)
         self.fc4= nn.Linear(256, 256)
@@ -49,7 +49,8 @@ class Net(nn.Module):
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
         h4 = func.silu(self.fc3(h3))
-        y = func.silu(self.fc4(h4)) * self.ode_mean
+        h5 = func.silu(self.fc4(h4))
+        y = func.silu(self.fc5(h5)) * self.ode_mean
         return y
 
     # Reset function for the training weights

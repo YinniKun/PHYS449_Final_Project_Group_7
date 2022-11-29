@@ -165,7 +165,7 @@ class Data(Dataset):
         self.data_inputs = self.time[rand_indexes]
         self.data_labels = self.conc[rand_indexes]
 
-        self.aux_inputs = np.asarray([self.time[0], self.time[-1]])
+        self.aux_inputs = np.asarray([self.time[0], self.time[int(self.time.size / 2)]])
         self.aux_labels = np.asarray([[x, y] for x, y in zip(self.conc[0, :], self.conc[-1, :])])
 
         self.ode_inputs = self.time[ode_loss_indexes]
