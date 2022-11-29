@@ -289,5 +289,7 @@ if __name__ == '__main__':
     data.save_as_csv()
     model = Net(7)
     model.double()
+    dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    model.to(dev)
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
