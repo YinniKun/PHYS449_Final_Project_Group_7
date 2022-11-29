@@ -7,7 +7,7 @@ Origninal paper from Yazdani A, Lu L, Raissi M, Karniadakis GE. Systems biology 
 This repo contains the code and data to recreate the work by Yazdani et al., 2020. In their work, Yazdani et al. utilized deep learning to determie the parameters for systems biology models.
 
 ## File structure
-Three models are tested and validated with the neural network architecture, each with a ``main.py`` that is used to train the model and produce the final report / figure, as well as two source files ``nn_gen.py`` and ``data_gen.py`` that contains the neutral network architecture and the code for generating the data for training. 
+Three models are tested and validated with the neural network architecture, each with a ``main.py`` that is used to train the model and utilizes ``plot.py`` to generate plots from the results. There are also two source files ``nn_gen.py`` and ``data_gen.py`` that contains the neutral network architecture and the code for generating the data for training. 
 
 The file structre is outlined below:
 
