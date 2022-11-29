@@ -1,0 +1,26 @@
+{
+    "optim": {
+        "learning_rate": 1e-3,
+        "num_epochs": 1,
+        "init_iters_noiseless": 1000,
+        "full_iters_noiseless": 9e4,
+        "init_iters_noisy": 1000,
+        "full_iters_noisy": 2e6
+    },
+    "model":{
+        "input_size": 8,
+        "sequence_length": 2,
+        "hidden_size": 16,
+        "num_layers": 2
+    },
+    "data": {
+        "t_min": 0,
+        "t_max": 10,
+        "num_data_points": 2000,
+        "num_data_loss": 500,
+        "num_ode_loss": 500,
+        "num_species_tot": 7,
+        "num_species_measured": 2,
+        "noisy?": false
+    }
+}
