@@ -203,11 +203,16 @@ class Data(Dataset):
         """Get number of samples in dataset."""
         return self.n_points
 
-    def save_as_csv(self):
-        """Save time and concentrations to data.csv file."""
+    def save_as_txt(self):
+        """Save time and concentrations to txt files in data folder."""
         head = ['t', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7']
         np.savetxt('data/true_conc.txt',
                    np.hstack((self.time[:, None], self.conc)),
+                   header='\t'.join(head),
+                   delimiter='\t',
+                   comments='')
+        np.savetxt('data/meas_conc.txt',
+                   np.hstack((self.data_inputs[:, None], self.data_labels)),
                    header='\t'.join(head),
                    delimiter='\t',
                    comments='')
