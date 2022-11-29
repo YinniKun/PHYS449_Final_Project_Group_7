@@ -3,6 +3,8 @@
 import math
 import numpy as np
 
+from src.data_gen import *
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as func
@@ -26,9 +28,9 @@ class Net(nn.Module):
         self.fc4= nn.Linear(128, n_output)
 
         ## average concentration
-        concentration = np.compress([False, True], data.datalabels, axis = 2)
-        reshape_concentration = np.reshape(concentration, (7,len(concentration[0])))
-        self.ode_mean = np.mean(reshape_concentration, axis=1)
+        #concentration = np.compress([False, True], data.conc, axis = 2)
+        #reshape_concentration = np.reshape(concentration, (7,len(concentration[0])))
+        self.ode_mean = np.mean(data.conc, axis=0)
 
     def feature(self, t):
         """
@@ -54,7 +56,7 @@ class Net(nn.Module):
         h1 = func.silu(self.fc1(in_scal))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
-        y = func.silu(self.fc4(h3))* self.ode_mean
+        y = func.silu(self.fc4(h3))* torch.from_numpy(self.ode_mean)
         return y
 
     # Reset function for the training weights
@@ -68,7 +70,6 @@ class Net(nn.Module):
     # Backpropagation function
      # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
     #   ode_mean should be a 1xn vector
-    #!!!!!! the loss function is yet to be defined in main.py !!!!!
     def backprop(self, loss, optimizer):
         self.train()
         optimizer.zero_grad()
@@ -77,9 +78,7 @@ class Net(nn.Module):
         return loss.item()
 
     # Test function. Avoids calculation of gradients.
-    # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
-    #   ode_mean should be a 1xn vector
-    def test(self, data, loss, epoch, ode_mean):
+    def test(self, data, loss, epoch):
         self.eval()
         with torch.no_grad():
             inputs= torch.from_numpy(data.x_test)
