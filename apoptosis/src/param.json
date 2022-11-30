@@ -21,6 +21,6 @@
         "num_ode_loss": 120,
         "num_species_tot": 8,
         "num_species_measured": 1,
-        "noisy?": false
+        "noisy?": true
     }
 }

@@ -152,6 +152,17 @@ class Data(Dataset):
 
         data_loss_train_size = params['num_data_loss']
         ode_loss_train_size = params['num_ode_loss']  # cant find in the paper where they specify this set size
+        noisy_bool = params['noisy?']
+
+        # Create noise and apply to correct concentration time points
+        if noisy_bool:
+            conc_tr = np.transpose(self.conc)
+            mu_conc = np.std(conc_tr[3])
+            conc_noise = np.empty((2000, 1))
+            for i in range(0, conc_tr[0].size):
+                conc_noise[i] = np.random.default_rng().normal(0, 0.05 * mu_conc)
+            self.conc[:, 3] = self.conc[:, 3] + conc_noise[:, 0]
+            print("\nNoisy Concentration\n")
 
         # get times for training data
 
