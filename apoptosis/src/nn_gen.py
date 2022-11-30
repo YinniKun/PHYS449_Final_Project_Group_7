@@ -48,9 +48,8 @@ class Net(nn.Module):
         h1 = func.silu(self.fc1(f1))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
-        h4 = func.silu(self.fc3(h3))
-        h5 = func.silu(self.fc4(h4))
-        y = func.silu(self.fc5(h5)) * self.ode_mean
+        h4 = func.silu(self.fc4(h3))
+        y = func.silu(self.fc5(h4)) * self.ode_mean
         return y
 
     # Reset function for the training weights
