@@ -181,6 +181,18 @@ class Data(Dataset):
 
         data_loss_train_size = params['num_data_loss']
         ode_loss_train_size = params['num_ode_loss']  # cant find in the paper where they specify this set size
+        noisy_bool = params['noisy?']
+
+        # Create noise and apply to correct concentration time points
+        if noisy_bool:
+            conc_tr = np.transpose(self.conc)
+            mu_conc = [np.std(x) for x in conc_tr[4:6]]
+            conc_noise = np.empty((2000, 2))
+            for i in range(0, conc_tr[0].size):
+                conc_noise[i] = np.asarray([np.random.default_rng().normal(0, 0.1 * mu) for mu in mu_conc])
+            self.conc[:, 4] = self.conc[:, 4] + conc_noise[:, 0]
+            self.conc[:, 5] = self.conc[:, 5] + conc_noise[:, 1]
+            print("\nNoisy Concentrations\n")
 
         # get times for training data
 
@@ -203,11 +215,16 @@ class Data(Dataset):
         """Get number of samples in dataset."""
         return self.n_points
 
-    def save_as_csv(self):
-        """Save time and concentrations to data.csv file."""
+    def save_as_txt(self):
+        """Save time and concentrations to txt files in data folder."""
         head = ['t', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7']
         np.savetxt('data/true_conc.txt',
                    np.hstack((self.time[:, None], self.conc)),
+                   header='\t'.join(head),
+                   delimiter='\t',
+                   comments='')
+        np.savetxt('data/meas_conc.txt',
+                   np.hstack((self.data_inputs[:, None], self.data_labels)),
                    header='\t'.join(head),
                    delimiter='\t',
                    comments='')
