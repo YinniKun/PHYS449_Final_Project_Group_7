@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import data_gen as data 
 
 from src.data_gen import *
 
@@ -50,9 +49,9 @@ class Net(nn.Module):
 
     # Feedforward function
     def forward(self, t, t_max=10):
-        f1 = self.feature(t)
-        in_scal = f1 / t_max
-        h1 = func.silu(self.fc1(in_scal))
+        in_scal = t / t_max
+        f1 = self.feature(in_scal)
+        h1 = func.silu(self.fc1(f1))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
         y = func.silu(self.fc4(h3)) * self.ode_mean
