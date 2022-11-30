@@ -115,8 +115,8 @@ def grad_glycolysis_model(t, p, x):
     d_v6_d_k6 = x[1] * x[4]
     d_v7_d_k = x[6]
     d_J_d_kappa = x[3] - x[6]
-    d_v1_d_q = -d_v1_comp * math.log(max((x[5] / K1), 0.001))
-    d_v1_d_K1 = d_v1_comp * q / max(K1, 0.001)
+    d_v1_d_q = -d_v1_comp * math.log(max((x[5] / K1), 0.000000001))
+    d_v1_d_K1 = d_v1_comp * q / max(K1, 0.000000001)
     d_v2_d_N = k2 * x[1]
     d_v3_dA = k3 * x[2]
 
