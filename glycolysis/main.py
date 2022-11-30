@@ -60,7 +60,7 @@ def update_p_vals(data_class, model, p):
     grad_f = np.asarray(get_data.grad_glycolysis_model(t, p, states_np[sgd_index][0]))
     grad_update += np.asarray([np.sum(2 * f * df_dp_i * weights) for df_dp_i in grad_f])
 
-    return grad_update, inner_loss * weights, states_np
+    return grad_update, np.sum(inner_loss * weights), states_np
 
 
 def weighted_loss(inputs, labels, loss, model, num_conc):
