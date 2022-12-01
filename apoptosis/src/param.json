@@ -4,8 +4,8 @@
         "num_epochs": 1,
         "init_iters_noiseless": 1000,
         "full_iters_noiseless": 9e4,
-        "init_iters_noisy": 1000,
-        "full_iters_noisy": 2e6
+        "init_iters_noisy": 0,
+        "full_iters_noisy": 1e6
     },
     "model":{
         "input_size": 8,
@@ -15,7 +15,7 @@
     },
     "data": {
         "t_min": 0,
-        "t_max": 10,
+        "t_max": 60,
         "num_data_points": 2000,
         "num_data_loss": 120,
         "num_ode_loss": 120,
