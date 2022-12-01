@@ -6,6 +6,7 @@ import json
 import math
 import torch
 from datetime import datetime
+import time
 
 import numpy as np
 import torch.optim as optim
@@ -196,6 +197,8 @@ def run_nn(param, model, data):
 
     print(f"Initial Data and Aux Training:\t Done")
 
+    start_time = time.time()
+
     # then loop through full iterations training all loss
     for x in range(int(epoch_full_iter)):
         summed_data_losses = []
@@ -247,10 +250,11 @@ def run_nn(param, model, data):
         d_ode_loss_dp, ode_loss, network_predicted_states = update_p_vals(data, model, p)
         p = p + learning_rate * d_ode_loss_dp
         if x % 500 == 0:
-            print(f'{x}/{epoch_full_iter}')
+            print(f'{x}/{int(epoch_full_iter)}')
             print(f'loss_tot no ode: {loss_tot.item()}')
             print(f'ode_loss: {ode_loss}')
             print(f'p_after: {p}')
+            print(f'time used: {time.time() - start_time}s')
 
         if x % 1000 == 0:  # track p and losses every 1000 epochs
             with open(all_loss_track_path, 'a') as graph_data:
