@@ -75,7 +75,7 @@ def weighted_loss(inputs, labels, loss, model, num_conc):
     """
     loss_values = []
     for inc, x in enumerate(inputs):
-        label = torch.from_numpy(np.asarray([labels[inc]]))
+        label = torch.from_numpy(np.asarray([labels[inc]])).to(dev)
         loss_value = loss(model.forward(x)[num_conc], label)
         loss_values.append(loss_value)
     loss_sum = sum([x.item() for x in loss_values])
@@ -131,7 +131,7 @@ def run_nn(param, model, data):
 
     # Define an optimizer and the loss function
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    mean_square_loss = torch.nn.MSELoss(reduction= 'mean')
+    mean_square_loss = torch.nn.MSELoss(reduction= 'mean').to(dev)
 
     model.reset()  # reset model parameters every time the nn is run
 
@@ -150,7 +150,7 @@ def run_nn(param, model, data):
             # inner sum over time points
             data_losses_sum = data_losses[0]
             for loss in data_losses[1:]:
-                data_losses_sum = torch.add(data_losses_sum, loss)
+                data_losses_sum = torch.add(data_losses_sum, loss).to(dev)
 
             # append inner sums of each concentration to a list
             summed_data_losses.append(data_losses_sum)
@@ -158,7 +158,7 @@ def run_nn(param, model, data):
         # outer sum of losses for m concentrations
         data_loss_total = summed_data_losses[0]
         for loss in summed_data_losses[1:]:
-            data_loss_total = torch.add(data_loss_total, loss)
+            data_loss_total = torch.add(data_loss_total, loss).to(dev)
 
 
         # calculate auxiliary loss for all species
@@ -169,7 +169,7 @@ def run_nn(param, model, data):
             # inner sum over time points
             aux_losses_sum = aux_losses[0]
             for loss in aux_losses[1:]:
-                aux_losses_sum = torch.add(aux_losses_sum, loss)
+                aux_losses_sum = torch.add(aux_losses_sum, loss).to(dev)
 
             # append inner sums of each concentration to a list
             summed_aux_losses.append(aux_losses_sum)
@@ -177,7 +177,7 @@ def run_nn(param, model, data):
         # outer sum of loss of all species
         aux_loss_total = summed_aux_losses[0]
         for loss in summed_aux_losses[1:]:
-            aux_loss_tot = torch.add(aux_loss_total, loss)
+            aux_loss_tot = torch.add(aux_loss_total, loss).to(dev)
 
         # sum of total data and aux losses
         loss_tot = data_loss_total + aux_loss_tot
@@ -209,7 +209,7 @@ def run_nn(param, model, data):
             # inner sum over time points
             data_losses_sum = data_losses[0]
             for loss in data_losses[1:]:
-                data_losses_sum = torch.add(data_losses_sum, loss)
+                data_losses_sum = torch.add(data_losses_sum, loss).to(dev)
 
             # append inner sums of each concentration to a list
             summed_data_losses.append(data_losses_sum)
@@ -217,7 +217,7 @@ def run_nn(param, model, data):
         # outer sum of losses for m concentrations
         data_loss_total = summed_data_losses[0]
         for loss in summed_data_losses[1:]:
-            data_loss_total = torch.add(data_loss_total, loss)
+            data_loss_total = torch.add(data_loss_total, loss).to(dev)
 
 
         # calculate auxiliary loss for all species
@@ -228,7 +228,7 @@ def run_nn(param, model, data):
             # inner sum over time points
             aux_losses_sum = aux_losses[0]
             for loss in aux_losses[1:]:
-                aux_losses_sum = torch.add(aux_losses_sum, loss)
+                aux_losses_sum = torch.add(aux_losses_sum, loss).to(dev)
 
             # append inner sums of each concentration to a list
             summed_aux_losses.append(aux_losses_sum)
@@ -236,7 +236,7 @@ def run_nn(param, model, data):
         # outer sum of loss of all species
         aux_loss_total = summed_aux_losses[0]
         for loss in summed_aux_losses[1:]:
-            aux_loss_tot = torch.add(aux_loss_total, loss)
+            aux_loss_tot = torch.add(aux_loss_total, loss).to(dev)
 
         # sum of total data and aux losses
         loss_tot = data_loss_total + aux_loss_tot
@@ -247,6 +247,7 @@ def run_nn(param, model, data):
         d_ode_loss_dp, ode_loss, network_predicted_states = update_p_vals(data, model, p)
         p = p + learning_rate * d_ode_loss_dp
         if x % 500 == 0:
+            print(f'{x}/{epoch_full_iter}')
             print(f'loss_tot no ode: {loss_tot.item()}')
             print(f'ode_loss: {ode_loss}')
             print(f'p_after: {p}')
@@ -270,6 +271,7 @@ def run_nn(param, model, data):
 
 
 if __name__ == '__main__':
+    dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     parser = argparse.ArgumentParser()
     parser.add_argument('--param', default="src/param.json", help='json parameter file relative path', type=str)
     parser.add_argument('--data_seed', help='Random seed for generating training data', type=int)
@@ -287,7 +289,9 @@ if __name__ == '__main__':
     data = get_data.Data(params['data'], n_points=num_data_points)
     # Write true and measured concentrations to file.
     data.save_as_txt()
+    torch.backends.cudnn.benchmark = True
     model = Net(8,data)
     model.double()
+    model.to(dev)
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)

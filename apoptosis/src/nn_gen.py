@@ -20,6 +20,7 @@ class Net(nn.Module):
     '''
     def __init__(self, n_species, data):
         super(Net, self).__init__()
+        self.dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.fc1= nn.Linear(2, 256)
         self.fc2= nn.Linear(256, 256)
         self.fc3= nn.Linear(256, 256)
@@ -27,7 +28,7 @@ class Net(nn.Module):
         self.fc5= nn.Linear(256, n_species)
 
         ## average concentration for each species
-        self.ode_mean = torch.from_numpy(np.mean(data.conc, axis=0))
+        self.ode_mean = torch.from_numpy(np.mean(data.conc, axis=0)).to(self.dev)
 
     def feature(self, t):
         """
@@ -44,12 +45,12 @@ class Net(nn.Module):
     # Feedforward function
     def forward(self, t, t_max=60):
         in_scal = t / t_max
-        f1 = self.feature(in_scal)
+        f1 = self.feature(in_scal).to(self.dev)
         h1 = func.silu(self.fc1(f1))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
         h4 = func.silu(self.fc4(h3))
-        y = func.silu(self.fc5(h4)) * self.ode_mean
+        y = func.silu(self.fc5(h4)) * self.ode_mean.to(self.dev)
         return y
 
     # Reset function for the training weights
@@ -73,7 +74,7 @@ class Net(nn.Module):
     def test(self, data, loss, epoch):
         self.eval()
         with torch.no_grad():
-            inputs= torch.from_numpy(data.x_test)
-            targets= torch.from_numpy(data.y_test)
+            inputs= torch.from_numpy(data.x_test).to(self.dev)
+            targets= torch.from_numpy(data.y_test).to(self.dev)
             cross_val= loss(self.forward(inputs), targets)
         return cross_val.item()
