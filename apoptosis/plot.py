@@ -7,27 +7,33 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import src.data_gen as get_data
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+from pathlib import Path
 
 # ****************************************************************************
 # Specify what is to be plotted.
 # ****************************************************************************
 
 # File name of predicted p to plot vs true p over epochs.
-do_plot_p_vs_epoch = False
-p_file = 'data/p_versus_epochs_11-30 191939.txt'
+do_plot_p_vs_epoch = True
+p_file = max([f for f in Path('data').glob('p_versus_epochs*.txt')], key=lambda item: item.stat().st_ctime)
+# p_file = 'data/p_versus_epochs_12-01 082950.txt'
 
 # File name file of losses to plot over epochs.
-do_plot_loss_vs_epoch = False
-loss_file = 'data/all_losses_11-30 191939.txt'
+do_plot_loss_vs_epoch = True
+loss_file = max([f for f in Path('data').glob('all_losses*.txt')], key=lambda item: item.stat().st_ctime)
+# loss_file = 'data/all_losses_12-01 082950.txt'
 
 # File name of concentrations to plot vs measured/true data over time.
-do_plot_conc_from_file = False
-conc_file = 'data/network_conc_11-30 191939.txt'
+do_plot_conc_from_file = True
+conc_file = max([f for f in Path('data').glob('network_conc*.txt')], key=lambda item: item.stat().st_ctime)
+# conc_file = 'data/network_conc_12-01 082950.txt'
 entry = -1  # Index of the entry to plot, since the file may have many epochs.
 
 # Predicted p for generating concentrations to plot vs measured/true data over
 # time (can be a list of float or a whitespace separated string).
-do_plot_conc_from_p = False
+do_plot_conc_from_p = True
 p = '96.76790453992906 28.33982489795185 29.89611985918972 42.65319430991449 206.11860210324397 20.617080337050393 27958.542711870636 -65.28772413001332 -57.983112928340965'
 p_name = '11-30 191939'
 
