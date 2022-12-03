@@ -9,6 +9,7 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 
+sys.path.append(os.path.dirname(__file__))
 import src.data_gen as get_data
 
 # ****************************************************************************
@@ -63,7 +64,8 @@ p_yazdani = np.asarray([2.49, 86.1, 4.55, 14.0, 97.1, 1.24, 12.7, 1.55, 13.4, 4.
 names = ['J_0', 'k_1', 'k_2', 'k_3', 'k_4', 'k_5', 'k_6', 'k', '\kappa', 'q', 'K1', '\psi', 'N', 'A']
 
 # Indices of parameters in value ranges.
-near_0 = [0, 5, 7, 10, 11, 12]
+near_0 = [0, 10, 11]
+near_1 = [5, 7, 12]
 near_5 = [2, 9, 13]
 near_10 = [3, 6, 8]
 near_100 = [1, 4]
@@ -111,10 +113,10 @@ def plot_p_vs_true_p(p, input_name):
     :param input_name: name to append to end of plot name
 
     """
-    fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(7, 24),
+    fig, axs = plt.subplots(nrows=5, ncols=1, figsize=(7, 28),
                             constrained_layout=True)
     row = 0
-    for p_set in [near_0, near_5, near_10, near_100]:
+    for p_set in [near_0, near_1, near_5, near_10, near_100]:
         c_num = 0
         for ind in p_set:
             axs[row].axhline(y=p0[ind],
