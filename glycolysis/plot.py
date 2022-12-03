@@ -1,7 +1,9 @@
 # Plot the glycolysis model.
 
+import sys
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
+from pathlib import Path
 import math
 
 import numpy as np
@@ -15,15 +17,18 @@ import src.data_gen as get_data
 
 # File name of predicted p to plot vs true p over epochs.
 do_plot_p_vs_epoch = True
-p_file = 'data/p_versus_epochs_11-29 135348.txt'
+p_file = max([f for f in Path('data').glob('p_versus_epochs*.txt')],
+             key=lambda item: item.stat().st_ctime)
 
 # File name file of losses to plot over epochs.
 do_plot_loss_vs_epoch = True
-loss_file = 'data/all_losses_11-29 135348.txt'
+loss_file = max([f for f in Path('data').glob('all_losses*.txt')],
+                key=lambda item: item.stat().st_ctime)
 
 # File name of concentrations to plot vs measured/true data over time.
 do_plot_conc_from_file = True
-conc_file = 'data/network_conc_11-29 135348.txt'
+conc_file = max([f for f in Path('data').glob('network_conc*.txt')],
+                key=lambda item: item.stat().st_ctime)
 entry = -1  # Index of the entry to plot, since the file may have many epochs.
 
 # Predicted p for generating concentrations to plot vs measured/true data over
@@ -52,6 +57,7 @@ psi = 0.1
 N = 1
 A = 4
 p0 = np.asarray([J0, k1, k2, k3, k4, k5, k6, k, kappa, q, K1, psi, N, A])
+p_yazdani = np.asarray([2.49, 86.1, 4.55, 14.0, 97.1, 1.24, 12.7, 1.55, 13.4, 4.07, 0.550, 0.0823, 1.29, 4.25])
 
 # Legend names.
 names = ['J_0', 'k_1', 'k_2', 'k_3', 'k_4', 'k_5', 'k_6', 'k', '\kappa', 'q', 'K1', '\psi', 'N', 'A']
@@ -114,6 +120,9 @@ def plot_p_vs_true_p(p, input_name):
             axs[row].axhline(y=p0[ind],
                              color=colours[c_num],
                              label=r'Exact ${0}={1}$'.format(names[ind], p0[ind]))
+            axs[row].axhline(y=p_yazdani[ind],
+                             color=colours[c_num], linestyle='dotted',
+                             label=r'Yazdani et al ${0}={1}$'.format(names[ind], p_yazdani[ind]))
             axs[row].plot(p[:, -1], p[:, ind],
                           color=colours[c_num], linestyle='dashdot',
                           label=r'Learned ${0}$'.format(names[ind]))
