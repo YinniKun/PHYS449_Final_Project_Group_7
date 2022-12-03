@@ -27,7 +27,7 @@ The file structre is outlined below:
     - param.json
 
 ## Dependencies
-- sys, argparse, os
+- sys, argparse, os, datetime
 - math
 - numpy
 - torch
@@ -39,7 +39,7 @@ To run each model, go to the directory of the model, and use:
 
 ``python3 main.py``
 
-and the model will save the true and measured concentrations for each chemical species as a .txt file to ``./data``
+and the model will save the true and measured concentrations for each chemical species, initial loss, all losses, and the predicted p values over epochs as .txt files to ``./data``
 
 To generate the plots, go to the directory of the model, and use:
 
