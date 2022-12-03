@@ -4,6 +4,8 @@ import math
 import numpy as np
 import data_gen as data 
 
+from src.data_gen import *
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as func
@@ -19,12 +21,16 @@ class Net(nn.Module):
             scaling layer
         t_max = the max time point t in the input scaling layer
     '''
-    def __init__(self, n_output,data):
+
+    def __init__(self, n_output, data):
         super(Net, self).__init__()
         self.fc1= nn.Linear(7, 128)
         self.fc2= nn.Linear(128, 128)
         self.fc3= nn.Linear(128, 128)
         self.fc4= nn.Linear(128, n_output)
+
+        ## average concentration for each species
+        self.ode_mean = torch.from_numpy(np.mean(data.conc, axis=0))
 
     def feature(self, t):
         """
@@ -44,13 +50,13 @@ class Net(nn.Module):
             ])
 
     # Feedforward function
-    def forward(self, t, t_max=10, ode_mean=10):
-        f1 = self.feature(t)
-        in_scal = f1 / t_max
-        h1 = func.silu(self.fc1(in_scal))
+    def forward(self, t, t_max=10):
+        in_scal = t / t_max
+        f1 = self.feature(in_scal)
+        h1 = func.silu(self.fc1(f1))
         h2 = func.silu(self.fc2(h1))
         h3 = func.silu(self.fc3(h2))
-        y = func.silu(self.fc4(h3))* ode_mean
+        y = func.silu(self.fc4(h3)) * self.ode_mean
         return y
 
     # Reset function for the training weights
@@ -62,9 +68,6 @@ class Net(nn.Module):
         self.fc4.reset_parameters()
 
     # Backpropagation function
-     # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
-    #   ode_mean should be a 1xn vector
-    #!!!!!! the loss function is yet to be defined in main.py !!!!!
     def backprop(self, loss, optimizer):
         self.train()
         optimizer.zero_grad()
@@ -73,9 +76,7 @@ class Net(nn.Module):
         return loss.item()
 
     # Test function. Avoids calculation of gradients.
-    # ode_mean is a the the magnitudes of the mean values of the ODE solution, in a vector
-    #   ode_mean should be a 1xn vector
-    def test(self, data, loss, epoch, ode_mean):
+    def test(self, data, loss, epoch):
         self.eval()
         with torch.no_grad():
             inputs= torch.from_numpy(data.x_test)

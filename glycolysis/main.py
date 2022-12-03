@@ -285,8 +285,9 @@ if __name__ == '__main__':
         print(f'Created directory: {data_dir}')
         os.mkdir(data_dir)
     data = get_data.Data(params['data'], n_points=num_data_points)
-    data.save_as_csv()
-    model = Net(7)
+    # Write true and measured concentrations to file.
+    data.save_as_txt()
+    model = Net(7,data)
     model.double()
     #print(data.data_labels, data.data_labels[0], data.aux_labels)
     run_nn(params, model, data)
