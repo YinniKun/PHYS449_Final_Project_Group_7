@@ -34,8 +34,8 @@ entry = -1  # Index of the entry to plot, since the file may have many epochs.
 # Predicted p for generating concentrations to plot vs measured/true data over
 # time (can be a list of float or a whitespace separated string).
 do_plot_conc_from_p = True
-p = '96.76790453992906 28.33982489795185 29.89611985918972 42.65319430991449 206.11860210324397 20.617080337050393 27958.542711870636 -65.28772413001332 -57.983112928340965'
-p_name = '11-30 191939'
+p = '110.80147930934477 53.34993605914982 37.733305979209476 30.57047691267049 212.64554778244266 26.960843134850595 20913.53385733023 105.02609900287923 77.19120134173545'
+p_name = '12-01 202131'
 
 # ****************************************************************************
 # Constants.
@@ -151,7 +151,7 @@ def plot_conc_from_file(true_conc, meas_conc, pred_conc, input_name, index=-1):
     """
     fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(14, 24),
                             constrained_layout=True)
-    measured = [2]  # Measured species (indexed at zero).
+    measured = [3]  # Measured species (indexed at zero).
     n_species = len(true_conc[0, :]) - 1   # Infer number of chemical species.
 
     # Tuple of indices when a new entry of concentrations begin.
@@ -214,7 +214,7 @@ def plot_conc_from_p(true_conc, meas_conc, pred_conc, input_name):
     """
     fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(14, 24),
                             constrained_layout=True)
-    measured = [2]  # Measured species (indexed at zero).
+    measured = [3]  # Measured species (indexed at zero).
     n_species = len(true_conc[0, :]) - 1   # Infer number of chemical species.
 
     for ind in range(n_species):
