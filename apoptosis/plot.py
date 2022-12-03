@@ -1,15 +1,16 @@
 # Plot the apoptosis model.
 
+import sys
 import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+from pathlib import Path
 import math
 
 import numpy as np
 from matplotlib import pyplot as plt
 
+sys.path.append(os.path.dirname(__file__))
 import src.data_gen as get_data
-import os
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
-from pathlib import Path
 
 # ****************************************************************************
 # Specify what is to be plotted.
@@ -17,23 +18,26 @@ from pathlib import Path
 
 # File name of predicted p to plot vs true p over epochs.
 do_plot_p_vs_epoch = True
-p_file = max([f for f in Path('data').glob('p_versus_epochs*.txt')], key=lambda item: item.stat().st_ctime)
+p_file = max([f for f in Path('data').glob('p_versus_epochs*.txt')],
+             key=lambda item: item.stat().st_ctime)
 # p_file = 'data/p_versus_epochs_12-01 082950.txt'
 
 # File name file of losses to plot over epochs.
 do_plot_loss_vs_epoch = True
-loss_file = max([f for f in Path('data').glob('all_losses*.txt')], key=lambda item: item.stat().st_ctime)
+loss_file = max([f for f in Path('data').glob('all_losses*.txt')],
+                key=lambda item: item.stat().st_ctime)
 # loss_file = 'data/all_losses_12-01 082950.txt'
 
 # File name of concentrations to plot vs measured/true data over time.
 do_plot_conc_from_file = True
-conc_file = max([f for f in Path('data').glob('network_conc*.txt')], key=lambda item: item.stat().st_ctime)
+conc_file = max([f for f in Path('data').glob('network_conc*.txt')],
+                key=lambda item: item.stat().st_ctime)
 # conc_file = 'data/network_conc_12-01 082950.txt'
 entry = -1  # Index of the entry to plot, since the file may have many epochs.
 
 # Predicted p for generating concentrations to plot vs measured/true data over
 # time (can be a list of float or a whitespace separated string).
-do_plot_conc_from_p = True
+do_plot_conc_from_p = False
 p = '110.80147930934477 53.34993605914982 37.733305979209476 30.57047691267049 212.64554778244266 26.960843134850595 20913.53385733023 105.02609900287923 77.19120134173545'
 p_name = '12-01 202131'
 
@@ -52,6 +56,18 @@ k5 = 7e-5 * 3600 * 1e5
 kd5 = 1.67e-5 * 3600
 kd6 = 1.67e-4 * 3600
 p0 = np.asarray([k1, kd1, kd2, k3, kd3, kd4, k5, kd5, kd6])
+p_yazdani = np.asarray([
+    0.34e-9 * 3600 * 1e5,
+    3.37e-7 * 3600,
+    2.38e-3 * 3600,
+    0.16e-8 * 3600 * 1e5,
+    4.23e-10 * 3600,
+    1.28e-3 * 3600,
+    7.25e-8 * 3600 * 1e5,
+    8.51e-11 * 3600,
+    1.57e-4 * 3600,
+    ])
+np.around(p_yazdani, decimals=2)
 
 # Legend names.
 names = ['k_1', 'k_{d1}', 'k_{d2}', 'k_3', 'k_{d3}', 'k_{d4}', 'k_5', 'k_{d5}', 'k_{d6}']
@@ -115,7 +131,10 @@ def plot_p_vs_true_p(p, input_name):
         for ind in p_set:
             axs[row].axhline(y=p0[ind],
                              color=colours[c_num],
-                             label=r'Exact ${0}={1}$'.format(names[ind], p0[ind]))
+                             label=r'Exact ${0}={1:.2f}$'.format(names[ind], p0[ind]))
+            axs[row].axhline(y=p_yazdani[ind],
+                             color=colours[c_num], linestyle='dotted',
+                             label=r'Yazdani et al ${0}={1:.2f}$'.format(names[ind],p_yazdani[ind]))
             axs[row].plot(p[:, -1], p[:, ind],
                           color=colours[c_num], linestyle='dashdot',
                           label=r'Learned ${0}$'.format(names[ind]))
