@@ -4,7 +4,7 @@ Group 7 : Richard (Zhifei) Dong, Callum Follett, Nolan Anthony Paul Johnston, St
 Origninal paper from Yazdani A, Lu L, Raissi M, Karniadakis GE. Systems biology informed deep learning for inferring parameters and hidden dynamics. PLoS computational biology. 2020;16(11):e1007575.
 
 ## Introduction
-This repo contains the code and data to recreate the work by Yazdani et al., 2020. In their work, Yazdani et al. utilized deep learning to determie the parameters for systems biology models.
+This repo contains the code and data to recreate the work by Yazdani et al., 2020. In their work, Yazdani et al. utilized deep learning to determie the parameters for systems biology models of apoptosis, glycolysis, and insulin glucose. In this project, instead of recreating all three models, only two - the apoptosis and glycolysis models - will be studied and tested.
 
 ## File structure
 Three models are tested and validated with the neural network architecture, each with a ``main.py`` that is used to train the model and utilizes ``plot.py`` to generate plots from the results. There are also two source files ``nn_gen.py`` and ``data_gen.py`` that contains the neutral network architecture and the code for generating the data for training in the ``./src/`` directory. Lastly, a ``param.json`` can also be found in the ``./src/`` direcotry that contains all the necessary hyperparameters.
@@ -25,13 +25,6 @@ The file structre is outlined below:
     - data_gen.py
     - nn_gen.py
     - param.json
-- ~/insulin
-  - main.py
-  - plot.py
-  - ./src/
-    - data_gen.py
-    - nn_gen.py
-    - param.json
 
 ## Dependencies
 - sys, argparse, os
@@ -45,6 +38,12 @@ The file structre is outlined below:
 To run each model, go to the directory of the model, and use:
 
 ``python3 main.py``
+
+and the model will save the true and measured concentrations for each chemical species as a .txt file to ``./data``
+
+To generate the plots, go to the directory of the model, and use:
+
+``python3 plot.py``
 
 ## Results
 
