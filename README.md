@@ -28,10 +28,11 @@ The file structre is outlined below:
 
 ## Dependencies
 - sys, argparse, os, datetime
+- scipy
 - math
 - numpy
 - torch
-- matplotlib.pyplot
+- matplotlib
 
 ## Running each model
 
