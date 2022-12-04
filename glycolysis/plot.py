@@ -34,7 +34,7 @@ entry = -1  # Index of the entry to plot, since the file may have many epochs.
 
 # Predicted p for generating concentrations to plot vs measured/true data over
 # time (can be a list of float or a whitespace separated string).
-do_plot_conc_from_p = False
+do_plot_conc_from_p = True
 p = '-0.6762044145348005 106.23339162161375 35.28790351907249 57.64332159931993 132.96802797215415 2.2439889854315402 13.39090120928569 2.5826227671061948 40.656343141279045 7.215781778386592 7.345766312761084 38.875775469197265 35.08737720011627 57.81059180122517'
 p_name = '11-29 135348'
 
@@ -162,7 +162,7 @@ def plot_conc_from_file(true_conc, meas_conc, pred_conc, input_name, index=-1):
                             constrained_layout=True)
 
     measured = [4, 5]  # Measured species (indexed at zero).
-    n_species = len(pred_conc[0, :]) - 1   # Infer number of chemical species.
+    n_species = len(true_conc[0, :]) - 1   # Infer number of chemical species.
 
     # Tuple of indices when a new entry of concentrations begin.
     entry_boundaries = np.where(pred_conc[:, 0] == pred_conc[:, 0][0])[0]
@@ -187,7 +187,6 @@ def plot_conc_from_file(true_conc, meas_conc, pred_conc, input_name, index=-1):
             axs[row, col].plot(meas_conc[:, 0], meas_conc[:, ind + 1],
                                color='b', label='Exact',
                                marker='o', markersize=3, linestyle='None')
-            print()
         else:
             axs[row, col].plot(true_conc[:, 0], true_conc[:, ind + 1],
                                color='b', label='Exact')
@@ -213,7 +212,7 @@ def plot_conc_from_file(true_conc, meas_conc, pred_conc, input_name, index=-1):
                 bbox_inches='tight')
 
 
-def plot_conc_from_p(true_conc, pred_conc, input_name):
+def plot_conc_from_p(true_conc, meas_conc, pred_conc, input_name):
     """Plot predicted concentrations from p vs measured/true data over time.
 
     Generate one figure with subplots of the concentration of each chemical
@@ -228,7 +227,7 @@ def plot_conc_from_p(true_conc, pred_conc, input_name):
     fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(14, 24),
                             constrained_layout=True)
     measured = [4, 5]  # Measured species (indexed at zero).
-    n_species = len(pred_conc[0, :]) - 1   # Infer number of chemical species.
+    n_species = len(true_conc[0, :]) - 1   # Infer number of chemical species.
 
     for ind in range(n_species):
 
@@ -245,7 +244,7 @@ def plot_conc_from_p(true_conc, pred_conc, input_name):
                            color='r', linestyle='dashdot', label='Learned')
         # Configure subplot.
         axs[row, col].set_xlabel('t (min)')
-        axs[row, col].set_ylabel(r'S_{0} (mM)'.format(ind+1))
+        axs[row, col].set_ylabel(r'$S_{0}$ (mM)'.format(ind+1))
         # Autoscale axes to each subplot.
         axs[row, col].relim()
         axs[row, col].autoscale()
